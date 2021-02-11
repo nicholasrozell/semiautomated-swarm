@@ -50,7 +50,7 @@ class RadioComm:
 
         msg = convert_to_bytes(data)
         decoded = self.autopilot.mav.decode(msg)
-        print(data.msgid)
+        print(data.msgid, decoded)
         #if data.msgid == 0:
         #    print("MAVLINK_MSG_ID_HEARTBEAT")
 
