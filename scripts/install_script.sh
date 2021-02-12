@@ -62,3 +62,6 @@ wget https://raw.githubusercontent.com/mavlink/mavros/master/mavros/scripts/inst
 ./install_geographiclib_datasets.sh
 
 printf "INSTALLED MAVROS"
+
+# Install mavproxy to root
+sudo pip3 install MAVProxy
