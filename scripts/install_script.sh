@@ -21,7 +21,8 @@ git submodule update --init --recursive
 cd Tools/environment_install
 ./install-prereqs-ubuntu.sh -y
 
-. ~/.profile cd ../..
+. ~/.profile 
+cd ../..
 
 sleep 5s
 ./waf configure --board sitl
