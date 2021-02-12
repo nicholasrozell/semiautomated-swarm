@@ -9,7 +9,7 @@ sleep 1s
 sudo apt upgrade
 
 # install essentials
-sudo apt install build-essentials git openssh-server -y
+sudo apt install build-essential git openssh-server -y
 
 # clone ardupilot and build
 git clone https://github.com/ArduPilot/ardupilot.git
