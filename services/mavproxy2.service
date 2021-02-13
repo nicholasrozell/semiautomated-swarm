@@ -1,0 +1,14 @@
+[Unit]
+Description=Mavproxytwo
+After=network.target
+
+[Service]
+ExecStart=/home/r5-luke/mavproxy_script2.sh
+WorkingDirectory=/home/r5-luke
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=r5-luke
+
+[Install]
+WantedBy=multi-user.target
