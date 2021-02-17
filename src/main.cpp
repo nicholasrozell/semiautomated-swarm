@@ -1,6 +1,7 @@
 #include <iostream>
 #include <navigation.h>
 #include <guidance.h>
+#include <pid.h>
 
 #include <geometry_msgs/Vector3.h>
 
@@ -9,6 +10,20 @@ using namespace std;
 
 int main()
 {
+    float dt = 0;
+
+    dt = .025; //~40 Hz based on input
+
+    PID course_pid, alt_pid, vel_pid;
+
+    float K_COURSE_P(0.1), K_COURSE_I(0.0001), K_COURSE_D(0.2);
+    float K_ALT_P(0.1), K_ALT_I(0.0001), K_ALT_D(0.2);
+    float K_VEL_P(0.1), K_VEL_I(0.0001), K_VEL_D(0.2);
+    float LIMIT_ROLL(60*M_PI/180), LIMIT_PITCH(30*M_PI/180), LIMIT_THRUST(1.0);
+
+    course_pid.init(K_COURSE_P, K_COURSE_I, K_COURSE_D, LIMIT_ROLL, 0, dt);
+    alt_pid.init(K_ALT_P, K_ALT_I, K_ALT_D, LIMIT_PITCH, 0, dt);
+    vel_pid.init(K_VEL_P, K_VEL_I, K_VEL_D, LIMIT_THRUST, 0, dt);
 
     guidance guide;
 
