@@ -23,6 +23,8 @@ include_directories(${std_msgs_INCLUDE_DIRS})
 find_package(geometry_msgs REQUIRED)
 include_directories(${geometry_msgs_INCLUDE_DIRS})
 
-set(SWARM_SRC src/main.cpp src/navigation.cpp src/guidance.cpp src/pid.cpp)
+set(SWARM_SRC src/main.cpp src/navigation.cpp
+    src/guidance.cpp src/pid.cpp src/gnc.cpp)
+
 add_executable(swarmcontrol ${SWARM_SRC})
 target_link_libraries(swarmcontrol ${roscpp_LIBRARIES})
