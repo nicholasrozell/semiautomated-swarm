@@ -1,15 +1,17 @@
 #include <iostream>
+#include <gnc.h>
 #include <navigation.h>
-#include <guidance.h>
-#include <pid.h>
 
-#include <geometry_msgs/Vector3.h>
 
-using namespace geometry_msgs;
 using namespace std;
 
 int main()
 {
+
+    GNC gnc;
+    gnc.Run();
+
+    /*
     float dt = 0;
 
     dt = .025; //~40 Hz based on input
@@ -44,7 +46,7 @@ int main()
     guide.orbitFollowing(c,rho, lambda, p1, course, alt_c, course_c);
 
     cout << "Alt " << alt_c <<" coursec " << course_c <<std::endl;
-
+    */
 
 
     /*
@@ -53,25 +55,25 @@ int main()
 
     navigation nav;
 
-    Vector3 lla, home_loc;
-    Vector3 ecef;
-    Vector3 ned;
+    Vector3d lla, home_loc;
+    Vector3d ecef;
+    Vector3d ned;
 
-    lla.x = 37.89124;
-    lla.y = -120.98445;
-    lla.z = 548;
+    lla(0) = 37.89124;
+    lla(1) = -120.98445;
+    lla(2) = 548;
 
-    home_loc.x = 37.88129;
-    home_loc.y = -120.99828;
-    home_loc.z = 500;
+    home_loc(0) = lla(0);//37.88129;
+    home_loc(1) = lla(1);//-120.99828;
+    home_loc(2) = 500;
 
 
     nav.sethome(home_loc);
 
     nav.convertLLA2NED(lla, ned);
-    cout << "X = " <<ned.x << endl;
-    cout << "Y = " <<ned.y << endl;
-    cout << "Z = " <<ned.z << endl;
+    cout << "X = " <<ned(0) << endl;
+    cout << "Y = " <<ned(1) << endl;
+    cout << "Z = " <<ned(2) << endl;
 
     vector<int> a, b;
     for (int i =0; i<10;i++)
@@ -99,7 +101,5 @@ int main()
     cout << "\n";
 
     */
-
-
     return 0;
 }
