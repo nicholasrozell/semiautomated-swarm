@@ -20,18 +20,19 @@ GNC::GNC()
     this->gpsdata_sub = this->nav_node->subscribe(gpsdata_topic, 1000, &GNC::getGPSData, this);
 
     // create a topic name to read messages and create a subscriber
-    std::string neddata_topic = "/mavros/global_position/local";
+    std::string neddata_topic = "/mavros/local_position/pose";
     this->neddata_sub = this->nav_node->subscribe(neddata_topic, 1000, &GNC::getNEDData, this);
-
 
     std::string veldata_topic = "/mavros/local_position/velocity_local";
     this->veldata_sub = this->nav_node->subscribe(veldata_topic, 1000, &GNC::getVelocityData, this);
 
-    std::string planningdata_topic = "/control/waypoints";
-    this->planning_sub = this->nav_node->subscribe(planningdata_topic, 1000, &GNC::getWaypointData, this);
+    std::string home_topic = "/mavros/home_position/home";
+    this->homedata_sub = this->nav_node->subscribe(home_topic, 1000, &GNC::getHomeData, this);
 
+    std::string planningdata_service = "/control/waypoints";
+    this->waypoint_service = this->nav_node->advertiseService(planningdata_service, &GNC::getWaypointData, this);
 
-    // create a publisher to publish attitude messages
+    // create a service to update the waypoints
     this->att_control_pub = this->nav_node->advertise<mavros_msgs::AttitudeTarget>("/mavros/setpoint_raw/attitude", 10);
 
     lla(0) = 0;
@@ -56,13 +57,13 @@ void GNC::getGPSData(const NavSatFix& msg)
 
 }
 
-void GNC::getNEDData(const Odometry& msg)
+void GNC::getNEDData(const PoseStamped& msg)
 {
     // Local position is given in ENU frame
     // Convert to position in NED for guidance and navigation
-    local_pos(0) = msg.pose.pose.position.y;
-    local_pos(1) = msg.pose.pose.position.x;
-    local_pos(2) = -1*msg.pose.pose.position.z;
+    local_pos(0) = msg.pose.position.y;
+    local_pos(1) = msg.pose.position.x;
+    local_pos(2) = -1*msg.pose.position.z;
 
 
 }
@@ -77,23 +78,27 @@ void GNC::getVelocityData(const TwistStamped& msg)
     local_vel(2) = msg.twist.linear.z;
 }
 
-void GNC::getWaypointData(const WaypointList& msg)
+bool GNC::getWaypointData(WaypointPush::Request &req,
+                          WaypointPush::Response &res)
 {
+
+    std::cout << req.start_index << std::endl;
+
     vector<MissionWP> wplist;
     MissionWP wp_temp;
     Vector3d home;
 
     home = nav.gethome();
 
-    for (int i=0; i< msg.waypoints.size(); i++){
+    for (int i=0; i< req.waypoints.size(); i++){
 
-        wp_temp.lat = msg.waypoints[i].x_lat;
-        wp_temp.lon = msg.waypoints[i].y_long;
-        wp_temp.alt = msg.waypoints[i].z_alt;
+        wp_temp.lat = req.waypoints[i].x_lat;
+        wp_temp.lon = req.waypoints[i].y_long;
+        wp_temp.alt = req.waypoints[i].z_alt;
 
-        if (msg.waypoints[i].frame == 0){
+        if (req.waypoints[i].frame == 0){
 
-            wp_temp.alt = msg.waypoints[i].z_alt - home(2);
+            wp_temp.alt = req.waypoints[i].z_alt - home(2);
         }
 
         // std::cout << i<< "," <<wp_temp.lat <<", "<<  msg.waypoints[i].x_lat << std::endl;
@@ -101,29 +106,63 @@ void GNC::getWaypointData(const WaypointList& msg)
         wplist.push_back( wp_temp);
 
     }
+    res.success = true;
+    res.wp_transfered = req.waypoints.size();
 
     if(!WPSET){
 
-        nav.appendWaypoints(msg.current_seq, wplist);
+        nav.appendWaypoints(req.start_index, wplist);
         WPSET = true;
     }
+    return true;
+}
+
+void GNC::getHomeData(const HomePosition &msg)
+{
+    Vector3d home, home_prev;
+
+    home(0) = msg.geo.latitude;
+    home(1) = msg.geo.longitude;
+    home(2) = msg.geo.altitude;
+
+    home_prev = nav.gethome();
+
+    if (home(0)!= home_prev(0) ||
+        home(0)!= home_prev(0) ||
+        home(0)!= home_prev(0))
+    {
+        // if different from current home, then set
+        nav.sethome(home);
+        ROS_INFO("HOME position set/updated");
+
+    }
+    else
+    {
+        ROS_INFO("HOME not updated...remove this message later after testing home changed");
+    }
+
+    HOMESET = true;
 
 }
 
 void GNC::Run()
 {
     double course;
-    Vector3d lla_temp, vel_temp, ned_temp, home_temp;
+    double course_c, alt_c;
+    Vector3d lla_temp, vel_temp, ned_temp, ned_wp, ned_wp_prev;
+    Vector3d curr_wp, prev_wp;
+    Vector3d home;
+    Vector3d r, q;
+    Quaternionf quat;
 
     float dt = 0;
-
     dt = .025; //~40 Hz based on input
 
     PID course_pid, alt_pid, vel_pid;
-    Vector3d curr_wp;
 
-    float K_COURSE_P(0.1), K_COURSE_I(0.0001), K_COURSE_D(0.2);
-    float K_ALT_P(0.1), K_ALT_I(0.0001), K_ALT_D(0.2);
+
+    float K_COURSE_P(1), K_COURSE_I(0.0), K_COURSE_D(0.0);
+    float K_ALT_P(0.095), K_ALT_I(0.0), K_ALT_D(0.00001);
     float K_VEL_P(0.1), K_VEL_I(0.0001), K_VEL_D(0.2);
     float LIMIT_ROLL(60*M_PI/180), LIMIT_PITCH(30*M_PI/180), LIMIT_THRUST(1.0);
 
@@ -131,14 +170,17 @@ void GNC::Run()
     alt_pid.init(K_ALT_P, K_ALT_I, K_ALT_D, LIMIT_PITCH, 0, dt);
     vel_pid.init(K_VEL_P, K_VEL_I, K_VEL_D, LIMIT_THRUST, 0, dt);
 
-    home_temp(0) = -35.363262;
-    home_temp(1) = 149.1652372;
-    home_temp(2) = 584.0900268;
+    // Loop until home is set
+    while (!HOMESET)
+    {
+        ros::spinOnce();
+        ros::Duration(0.5).sleep();
+    }
 
-    nav.sethome(home_temp);
 
-    ROS_INFO("Home location set");
-
+    home = nav.gethome();
+    prev_wp = home;
+    prev_wp(2) += 100;
 
     while (ros::ok()){
 
@@ -147,29 +189,84 @@ void GNC::Run()
             // Get current LLA, Velocity and Course
             lla_temp = lla;
             vel_temp = local_vel;
-
-            // nav.convertLLA2NED(lla_temp, ned_temp); // Use ros message instead of function in navigation clas
             ned_temp = local_pos;
 
-            course = atan2(local_vel(1), local_vel(0));//*180/M_PI
+            course = atan2(local_vel(1), local_vel(0));
             if(course < 0)
             {
                 course += 2*M_PI;
             }
 
+
             if (WPSET && nav.getCurrentSeq() >= 0)
             {
                 curr_wp = nav.getCurrWaypoint();
+                curr_wp(2) += home(2);
 
-                ROS_INFO_STREAM(nav.getCurrentSeq() << "," <<curr_wp(0) <<", " << curr_wp(1) << ", "<< curr_wp(2));
 
-                nav.updateWaypointCount();
+                // convert WP to LLA
+                nav.convertLLA2NED(curr_wp, ned_wp);
+                nav.convertLLA2NED(prev_wp, ned_wp_prev);
+
+                ROS_INFO_STREAM("currpos "<<ned_temp(0) <<", " << ned_temp(1) << ", "<< ned_temp(2));
+                ROS_INFO_STREAM("NED Wp "<<ned_wp(0) <<", " << ned_wp(1) << ", "<< ned_wp(2));
+                ROS_INFO_STREAM("NED WpPrev "<<ned_wp_prev(0) <<", " << ned_wp_prev(1) << ", "<< ned_wp_prev(2));
+                ROS_INFO_STREAM("NED q "<<q(0) <<", " << q(1) << ", "<< q(2));
+
+                r = ned_wp_prev;
+                q = ned_wp - ned_wp_prev;
+                q = q/q.norm();
+
+
+                guide.straightlineFollowing(r, q, ned_temp, course, alt_c, course_c);
+
+                std::cout << "Alt C = " << alt_c << ", Course C = " << course_c << std::endl;
+
+                Vector3d diff;
+                diff = ned_temp - curr_wp;
+                std::cout << diff.norm() << std::endl;
+
+                if(diff.norm() < 20){
+                   nav.updateWaypointCount();
+                   prev_wp = curr_wp;
+                }
+
+                float pitch, roll, yaw;
+
+                pitch = alt_pid.controller_output(alt_c, -1*ned_temp(2), false);//*M_PI/180;
+                std::cout << "pitch = " << pitch << "," <<alt_c << ", " << -ned_temp(2) << std::endl;
+                roll = course_pid.controller_output(course_c, course, false);
+                std::cout << "roll = " << roll << "," <<course_c << ", " << course << std::endl;
+                yaw = 90*M_PI/180;
+
+
+                quat = AngleAxisf(pitch, Vector3f::UnitX())
+                    * AngleAxisf(roll, Vector3f::UnitY())
+                    * AngleAxisf(yaw, Vector3f::UnitZ()); // roll is y axis and pitch is x axis in mavros body frame
+
+                att_msg.type_mask = 0b00000100;
+                att_msg.orientation.w = quat.w();
+                att_msg.orientation.x = quat.x();
+                att_msg.orientation.y = quat.y();
+                att_msg.orientation.z = quat.z();
+
+                att_msg.thrust = 0.8;
+
+                att_msg.body_rate.x = 0;
+                att_msg.body_rate.y = 0;
+                att_msg.body_rate.z = 0;
+
+                //std::cout << "Quaternion" << std::endl << q.coeffs() << std::endl;
+
+                this->att_control_pub.publish(att_msg);
+
                 ros::Duration(0.1).sleep();
             }
             else{
                 ROS_INFO("Waypoints not set");
                 ros::Duration(1).sleep();
             }
+
         }
         ros::spinOnce();
 

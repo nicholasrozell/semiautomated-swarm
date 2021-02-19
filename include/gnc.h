@@ -11,9 +11,13 @@
 
 #include <ros/ros.h>
 #include <mavros_msgs/WaypointList.h>
+#include <mavros_msgs/WaypointPush.h>
 #include <mavros_msgs/AttitudeTarget.h>
+#include <mavros_msgs/HomePosition.h>
+
 #include <sensor_msgs/NavSatFix.h>
 #include <geometry_msgs/TwistStamped.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/Odometry.h>
 
 using namespace Eigen;
@@ -34,18 +38,26 @@ public:
 private:
     // Subscriber functions
     void getGPSData(const NavSatFix& msg);
-    void getNEDData(const Odometry& msg);
+    void getNEDData(const PoseStamped& msg);
     void getVelocityData(const TwistStamped& msg);
-    void getWaypointData(const WaypointList& msg);
+    void getHomeData(const HomePosition& msg);
+
+    // Service functions
+    bool getWaypointData(mavros_msgs::WaypointPush::Request &req,
+                         mavros_msgs::WaypointPush::Response &res);
 
     // Node definition
     ros::NodeHandlePtr nav_node;
 
     // subscribe to planning data
-    ros::Subscriber planning_sub;
+    // ros::Subscriber planning_sub;
     ros::Subscriber gpsdata_sub;
     ros::Subscriber veldata_sub;
     ros::Subscriber neddata_sub;
+    ros::Subscriber homedata_sub;
+
+    // service for waypoint data
+    ros::ServiceServer waypoint_service;
 
     // ros publisher for sending att data
     ros::Publisher att_control_pub;
@@ -55,6 +67,8 @@ private:
 
     navigation nav;
     guidance guide;
+
+    AttitudeTarget att_msg;
 
     bool HOMESET, WPSET;
 
