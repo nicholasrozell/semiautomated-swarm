@@ -3,7 +3,7 @@ import os
 
 username = os.environ['HOME'].split('/')[-1]
 
-mavproxypix_file = 'Mavproxy_Pix.service'
+mavproxypix_file = '../services/Mavproxy_Pix.service'
 
 datapix =f"""[Unit]
 Description=MavproxyPix
@@ -26,7 +26,7 @@ f.close()
 
 print(f"Created a service file named {mavproxypix_file}")
 
-mavproxycomm_file = 'Mavproxy_Comm.service'
+mavproxycomm_file = '../services/Mavproxy_Comm.service'
 datacomm =f"""[Unit]
 Description=MavproxyComm
 After=network.target
@@ -48,7 +48,7 @@ f.close()
 
 print(f"Created a service file named {mavproxycomm_file}")
 
-mavros_file = 'MavROS.service'
+mavros_file = '../services/MavROS.service'
 datamavros =f"""[Unit]
 Description=MavproxyComm
 After=network.target
