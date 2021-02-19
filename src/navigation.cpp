@@ -3,6 +3,12 @@
 navigation::navigation()
 {
     curr_seq = 1;
+
+    // presets
+    home.lla(0) = 0;
+    home.lla(1) = 0;
+    home.lla(2) = 0;
+
 }
 
 void navigation::convertLLA2ECEF(Vector3d lla, Vector3d& ecef)
@@ -46,7 +52,6 @@ void navigation::convertLLA2NED(Vector3d lla, Vector3d& ned)
     ned(0) = a;
     ned(1) = b;
     ned(2) = -(double) (lla(2) - c);
-
 
 }
 
