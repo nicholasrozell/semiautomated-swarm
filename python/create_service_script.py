@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os
 
-username =  os.environ['HOME'].split('/')[-1]
+username = os.environ['HOME'].split('/')[-1]
 
 mavproxypix_file = 'Mavproxy_Pix.service'
 
