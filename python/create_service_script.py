@@ -56,7 +56,7 @@ Description=MavproxyComm
 After=network.target
 
 [Service]
-ExecStart={proj_dir}/scripts/launch_mavros.sh
+ExecStart={proj_dir}/scripts/launch_mavros.sh %I
 WorkingDirectory={proj_dir}/scripts
 StandardOutput=inherit
 StandardError=inherit
