@@ -2,6 +2,8 @@
 import os
 
 username = os.environ['HOME'].split('/')[-1]
+path=os.getcwd()
+proj_dir = os.path.dirname(path)
 
 mavproxypix_file = '../services/Mavproxy_Pix.service'
 
@@ -10,8 +12,8 @@ Description=MavproxyPix
 After=network.target
 
 [Service]
-ExecStart=/home/{username}/mavproxy_script1.sh
-WorkingDirectory=/home/{username}
+ExecStart={proj_dir}/scripts/mavproxy_script1.sh
+WorkingDirectory={proj_dir}/scripts
 StandardOutput=inherit
 StandardError=inherit
 Restart=always
@@ -32,8 +34,8 @@ Description=MavproxyComm
 After=network.target
 
 [Service]
-ExecStart=/home/{username}/mavproxy_script2.sh
-WorkingDirectory=/home/{username}
+ExecStart={proj_dir}/scripts/mavproxy_script2.sh
+WorkingDirectory={proj_dir}/scripts
 StandardOutput=inherit
 StandardError=inherit
 Restart=always
@@ -54,8 +56,8 @@ Description=MavproxyComm
 After=network.target
 
 [Service]
-ExecStart=/home/{username}/launch_mavros.sh
-WorkingDirectory=/home/{username}
+ExecStart={proj_dir}/scripts/launch_mavros.sh
+WorkingDirectory={proj_dir}/scripts
 StandardOutput=inherit
 StandardError=inherit
 Restart=always
