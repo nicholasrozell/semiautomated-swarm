@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-import os
+import os, sys
+
+if len(sys.argv) < 2:
+    print("Error: SystemID must be provided")
+    sys.exit(-1)
+
+sysID = sys.argv[1]
 
 username = os.environ['HOME'].split('/')[-1]
 path=os.getcwd()
@@ -56,7 +62,7 @@ Description=MavproxyComm
 After=network.target
 
 [Service]
-ExecStart={proj_dir}/scripts/launch_mavros.sh %I
+ExecStart={proj_dir}/scripts/launch_mavros.sh {sysID}
 WorkingDirectory={proj_dir}/scripts
 StandardOutput=inherit
 StandardError=inherit
@@ -72,8 +78,3 @@ f.close()
 
 print(f"Created a service file named {mavros_file}")
 print("Created all service files")
-
-'''
-These files need to be copied to /etc/systemd/system folder and started
-TODO
-'''
