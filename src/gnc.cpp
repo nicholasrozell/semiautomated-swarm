@@ -161,8 +161,8 @@ void GNC::Run()
     PID course_pid, alt_pid, vel_pid;
 
 
-    float K_COURSE_P(1), K_COURSE_I(0.0), K_COURSE_D(0.0);
-    float K_ALT_P(0.095), K_ALT_I(0.0), K_ALT_D(0.00001);
+    float K_COURSE_P(0.5), K_COURSE_I(0.0), K_COURSE_D(0.0);
+    float K_ALT_P(0.075), K_ALT_I(0.0), K_ALT_D(0.00001);
     float K_VEL_P(0.1), K_VEL_I(0.0001), K_VEL_D(0.2);
     float LIMIT_ROLL(60*M_PI/180), LIMIT_PITCH(30*M_PI/180), LIMIT_THRUST(1.0);
 
