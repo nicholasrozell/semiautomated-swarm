@@ -2,7 +2,7 @@
 
 navigation::navigation()
 {
-    curr_seq = 1;
+    curr_seq = 2;
 
     // presets
     home.lla(0) = 0;
@@ -13,90 +13,58 @@ navigation::navigation()
 
 void navigation::convertLLA2ECEF(Vector3d lla, Vector3d& ecef)
 {
-    Vector3d templla;
-    double N_E;
+    double lat, lon, alt;
+    double b_by_a, a_by_b;
 
-    //Convert the lat and long to radians
-    templla(0) = lla(0) * (M_PI / 180);
-    templla(1) = lla(1) * (M_PI / 180);
+    b_by_a = SEMI_MINOR / SEMI_MAJOR; // value of b/a
+    a_by_b = SEMI_MAJOR / SEMI_MINOR; // value of a/b
 
-    N_E = R_EA / sqrt(1 - pow(ECCENTRICITY, 2) * pow(sin(templla(0)), 2));
+    // convert lat and long to radians
+    lat = lla(0) * (M_PI / 180);
+    lon = lla(1) * (M_PI / 180);
+    alt = lla(2);
 
-    // Transform to ECEF see eq 2.22 of ref 1
-    ecef(0) = (N_E + templla(2)) * cos(templla(0)) * cos(templla(1));
-    ecef(1) = (N_E + templla(2)) * cos(templla(0)) * sin(templla(1));
-    ecef(2) = (N_E * (1 - pow(ECCENTRICITY, 2)) + templla(2))
-            * sin(templla(0));
+    ecef(0) = (SEMI_MAJOR/(sqrt(pow(cos(lat), 2) + pow(b_by_a, 2) * pow(sin(lat), 2))) + alt) * cos(lat) * cos(lon);
+    ecef(1) = (SEMI_MAJOR/(sqrt(pow(cos(lat), 2) + pow(b_by_a, 2) * pow(sin(lat), 2))) + alt) * cos(lat) * sin(lon);
+    ecef(2) = (SEMI_MINOR/(sqrt(pow(a_by_b, 2) * pow(cos(lat), 2) + pow(sin(lat), 2))) + alt) * sin(lat);
 
 }
 
 void navigation::convertLLA2NED(Vector3d lla, Vector3d& ned)
 {
 
-    Vector3d ecef;
-    double a,b,c;
+    Vector3d ecef, ecef_diff;
+    Vector3d N, E, D;
+    Vector3d N_0(0,0,1);
+
+    Matrix3d R_N0, R_negE1;
+
     convertLLA2ECEF(lla, ecef);
+    ecef_diff = ecef - home.P_ecef;
 
-    a = home.R_NE[0][0] * (ecef(0) - home.P_ecef(0))
-            + home.R_NE[0][1] * (ecef(1) - home.P_ecef(1))
-            + home.R_NE[0][2] * (ecef(2) - home.P_ecef(2));
+    R_N0 = AngleAxisd(lla(1)*M_PI/180, Vector3d(0,0,1));
+    E = R_N0*Vector3d(0,1,0);
 
-    b = home.R_NE[1][0] * (ecef(0) - home.P_ecef(0))
-            + home.R_NE[1][1] * (ecef(1) - home.P_ecef(1))
-            + home.R_NE[1][2] * (ecef(2) - home.P_ecef(2));
+    R_negE1 = AngleAxisd(lla(0)*M_PI/180, -1*E);
+    N = R_negE1*Vector3d(0,0,1);
 
-    c = home.R_NE[2][0] * (ecef(0) - home.P_ecef(0))
-                + home.R_NE[2][1] * (ecef(1) - home.P_ecef(1))
-                + home.R_NE[2][2] * (ecef(2) - home.P_ecef(2));
+    D = N.cross(E);
 
-    ned(0) = a;
-    ned(1) = b;
-    ned(2) = -(double) (lla(2) - c);
+    ned(0) = ecef_diff.dot(N);
+    ned(1) = ecef_diff.dot(E);
+    ned(2) = ecef_diff.dot(D);
 
 }
 
-void navigation::sethome(Vector3d& lla)
+void navigation::sethome(Vector3d lla)
 {
 
-    double N_E;
-    Home temp_home;
+    Home home_loc;
+    home_loc.lla = lla;
 
-    //Convert the lat and long to radians
-    temp_home.lla(0) = lla(0) * (M_PI / 180);
-    temp_home.lla(1) = lla(1) * (M_PI / 180);
-    temp_home.lla(2) = lla(2);
+    convertLLA2ECEF(lla, home_loc.P_ecef);
 
-    // First row
-    temp_home.R_NE[0][0] = -sin(temp_home.lla(0)) * cos(temp_home.lla(1));
-    temp_home.R_NE[0][1] = -sin(temp_home.lla(0)) * sin(temp_home.lla(1));
-    temp_home.R_NE[0][2] = cos(temp_home.lla(0));
-
-    // Second row
-    temp_home.R_NE[1][0] = -sin(temp_home.lla(1));
-    temp_home.R_NE[1][1] = cos(temp_home.lla(1));
-    temp_home.R_NE[1][2] = 0;
-
-    // Third row
-    temp_home.R_NE[2][0] = -cos(temp_home.lla(0)) * cos(temp_home.lla(1));
-    temp_home.R_NE[2][1] = -cos(temp_home.lla(0)) * sin(temp_home.lla(1));
-    temp_home.R_NE[2][2] = -sin(temp_home.lla(0));
-
-
-    N_E = R_EA / sqrt(1 - pow(ECCENTRICITY, 2) * pow(sin(temp_home.lla(0)), 2));
-
-    temp_home.P_ecef(0) = (N_E + temp_home.lla(2)) * cos(temp_home.lla(0))
-            * cos(temp_home.lla(1));
-    temp_home.P_ecef(1) = (N_E + temp_home.lla(2)) * cos(temp_home.lla(0))
-            * sin(temp_home.lla(1));
-    temp_home.P_ecef(2) = (N_E * (1 - pow(ECCENTRICITY, 2)) + temp_home.lla(2))
-            * sin(temp_home.lla(0));
-
-
-    // Lat and Long should be in degrees
-    temp_home.lla(0) *= 180/M_PI;
-    temp_home.lla(1) *= 180/M_PI;
-
-    home = temp_home;
+    home = home_loc;
 
 }
 
@@ -146,4 +114,12 @@ Vector3d navigation::getCurrWaypoint()
     vec_wp(2) = wp.alt;
 
     return vec_wp;
+}
+
+bool navigation::HalfplaneCheck(Vector3d position, Vector3d r, Vector3d n)
+{
+    Vector3d error;
+    error = position - r;
+    return error.dot(n) >=0;
+
 }

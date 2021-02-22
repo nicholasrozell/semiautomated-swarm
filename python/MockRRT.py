@@ -10,7 +10,7 @@ def main():
     wp_push = rospy.ServiceProxy('/control/waypoints', WaypointPush)
 
     rate = rospy.Rate(1)  # send msgs at 0.5 Hz
-    df = pd.read_csv('SWFlightFieldWP.csv')
+    df = pd.read_csv('SWOMission.csv')
 
 
     print("Starting RRT")

@@ -3,8 +3,8 @@
 guidance::guidance()
 {
     // Line following params
-    X_inf = 0.2;
-    Kpath = 0.2;
+    X_inf = 60*M_PI/180;
+    Kpath = 0.01;
 
     // Orbit params
     Korbit = 0.01;
@@ -22,22 +22,22 @@ void guidance::straightlineFollowing(Vector3d r, Vector3d q, Vector3d p, double 
     // position error in inertial frame
     ei_p = p - r;
 
-    std::cout << "ei = " << ei_p(0) << ", " << ei_p(1) << ", "<<ei_p(2) << std::endl;
+    // std::cout << "ei = " << ei_p(0) << ", " << ei_p(1) << ", "<<ei_p(2) << std::endl;
 
     // n is vector normal to q-ki plane
     n = q.cross(ki);
     n = n/n.norm();
 
-    std::cout << "n = " << n(0) << ", "<<n(1)<<","<<n(2)<<std::endl;
+    //std::cout << "n = " << n(0) << ", "<<n(1)<<","<<n(2)<<std::endl;
 
     // s is projection of e (e is error in path frame). si is s in inertial frame
     si = ei_p - (ei_p.dot(n))*n;
 
-    std::cout << "si = " << si(0) << ", " << si(1) << ", "<<si(2) << std::endl;
+    //std::cout << "si = " << si(0) << ", " << si(1) << ", "<<si(2) << std::endl;
 
-    std::cout << "r2 = " << r(2) << std::endl;
-    std::cout << "s term = " << sqrt(pow(si(0), 2) + pow(si(1), 2)) << std::endl;
-    std::cout << "q term = " << ( q(2)/sqrt(pow(q(0), 2) + pow(q(1), 2)) ) << std::endl;
+    //std::cout << "r2 = " << r(2) << std::endl;
+    //std::cout << "s term = " << sqrt(pow(si(0), 2) + pow(si(1), 2)) << std::endl;
+    //std::cout << "q term = " << ( q(2)/sqrt(pow(q(0), 2) + pow(q(1), 2)) ) << std::endl;
 
     alt_c = -r(2) - sqrt(pow(si(0), 2) + pow(si(1), 2)) * ( q(2)/sqrt(pow(q(0), 2) + pow(q(1), 2)) );
 
@@ -52,7 +52,9 @@ void guidance::straightlineFollowing(Vector3d r, Vector3d q, Vector3d p, double 
         Xq -= 2*M_PI;
     }
 
-    epy = -sin(Xq*ei_p(0)) + cos(Xq*ei_p(1));
+    epy = -sin(Xq)*ei_p(0) + cos(Xq)*ei_p(1);
+
+    // std::cout << "Epy = " << epy << std::endl;
 
     course_c = Xq - X_inf*(2/M_PI)*atan(Kpath * epy);
 

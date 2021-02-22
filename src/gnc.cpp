@@ -145,30 +145,30 @@ void GNC::getHomeData(const HomePosition &msg)
 
 }
 
-void GNC::Run()
+void GNC::InitPID()
 {
-    double course;
-    double course_c, alt_c;
-    Vector3d lla_temp, vel_temp, ned_temp, ned_wp, ned_wp_prev;
-    Vector3d curr_wp, prev_wp;
-    Vector3d home;
-    Vector3d r, q;
-    Quaternionf quat;
-
-    float dt = 0;
     dt = .025; //~40 Hz based on input
 
-    PID course_pid, alt_pid, vel_pid;
-
-
-    float K_COURSE_P(0.5), K_COURSE_I(0.0), K_COURSE_D(0.0);
+    float K_COURSE_P(2), K_COURSE_I(0), K_COURSE_D(0.00001);
     float K_ALT_P(0.075), K_ALT_I(0.0), K_ALT_D(0.00001);
     float K_VEL_P(0.1), K_VEL_I(0.0001), K_VEL_D(0.2);
-    float LIMIT_ROLL(60*M_PI/180), LIMIT_PITCH(30*M_PI/180), LIMIT_THRUST(1.0);
+    float LIMIT_ROLL(45*M_PI/180), LIMIT_PITCH(30*M_PI/180), LIMIT_THRUST(1.0);
 
     course_pid.init(K_COURSE_P, K_COURSE_I, K_COURSE_D, LIMIT_ROLL, 0, dt);
     alt_pid.init(K_ALT_P, K_ALT_I, K_ALT_D, LIMIT_PITCH, 0, dt);
     vel_pid.init(K_VEL_P, K_VEL_I, K_VEL_D, LIMIT_THRUST, 0, dt);
+
+}
+
+void GNC::Run()
+{
+    double course;
+    double course_c, alt_c;
+    Vector3d lla_temp, vel_temp, ned_currpos, ned_wp, ned_wp_prev;
+    Vector3d curr_wp, prev_wp, home, r, q;
+    Quaternionf quat;
+
+    InitPID();
 
     // Loop until home is set
     while (!HOMESET)
@@ -177,10 +177,9 @@ void GNC::Run()
         ros::Duration(0.5).sleep();
     }
 
-
     home = nav.gethome();
     prev_wp = home;
-    prev_wp(2) += 100;
+    prev_wp(2) += 40;
 
     while (ros::ok()){
 
@@ -189,7 +188,7 @@ void GNC::Run()
             // Get current LLA, Velocity and Course
             lla_temp = lla;
             vel_temp = local_vel;
-            ned_temp = local_pos;
+            ned_currpos = local_pos;
 
             course = atan2(local_vel(1), local_vel(0));
             if(course < 0)
@@ -197,48 +196,42 @@ void GNC::Run()
                 course += 2*M_PI;
             }
 
-
             if (WPSET && nav.getCurrentSeq() >= 0)
             {
                 curr_wp = nav.getCurrWaypoint();
                 curr_wp(2) += home(2);
 
 
-                // convert WP to LLA
+                // convert WP to NED
                 nav.convertLLA2NED(curr_wp, ned_wp);
                 nav.convertLLA2NED(prev_wp, ned_wp_prev);
 
-                ROS_INFO_STREAM("currpos "<<ned_temp(0) <<", " << ned_temp(1) << ", "<< ned_temp(2));
-                ROS_INFO_STREAM("NED Wp "<<ned_wp(0) <<", " << ned_wp(1) << ", "<< ned_wp(2));
-                ROS_INFO_STREAM("NED WpPrev "<<ned_wp_prev(0) <<", " << ned_wp_prev(1) << ", "<< ned_wp_prev(2));
-                ROS_INFO_STREAM("NED q "<<q(0) <<", " << q(1) << ", "<< q(2));
+                // ROS_INFO_STREAM("currpos "<<ned_currpos(0) <<", " << ned_currpos(1) << ", "<< ned_currpos(2));
+                // ROS_INFO_STREAM("NED Wp "<<ned_wp(0) <<", " << ned_wp(1) << ", "<< ned_wp(2));
+                // ROS_INFO_STREAM("NED WpPrev "<<ned_wp_prev(0) <<", " << ned_wp_prev(1) << ", "<< ned_wp_prev(2));
+                // ROS_INFO_STREAM("NED q "<<q(0) <<", " << q(1) << ", "<< q(2));
 
                 r = ned_wp_prev;
                 q = ned_wp - ned_wp_prev;
                 q = q/q.norm();
 
 
-                guide.straightlineFollowing(r, q, ned_temp, course, alt_c, course_c);
+                guide.straightlineFollowing(r, q, ned_currpos, course, alt_c, course_c);
 
-                std::cout << "Alt C = " << alt_c << ", Course C = " << course_c << std::endl;
-
-                Vector3d diff;
-                diff = ned_temp - curr_wp;
-                std::cout << diff.norm() << std::endl;
-
-                if(diff.norm() < 20){
+                if(nav.HalfplaneCheck(ned_currpos, ned_wp, q)){
                    nav.updateWaypointCount();
                    prev_wp = curr_wp;
                 }
 
                 float pitch, roll, yaw;
 
-                pitch = alt_pid.controller_output(alt_c, -1*ned_temp(2), false);//*M_PI/180;
-                std::cout << "pitch = " << pitch << "," <<alt_c << ", " << -ned_temp(2) << std::endl;
-                roll = course_pid.controller_output(course_c, course, false);
-                std::cout << "roll = " << roll << "," <<course_c << ", " << course << std::endl;
-                yaw = 90*M_PI/180;
+                pitch = alt_pid.controller_output(alt_c, -1*ned_currpos(2), false);
+                //std::cout << "pitch = " << pitch << ", alt_c = " <<alt_c << ", curr height = " << -ned_currpos(2) << std::endl;
 
+                roll = course_pid.controller_output(course_c, course, false);
+                //std::cout << "roll = " << roll << ", course_c = " <<course_c << ", curr course = " << course << std::endl;
+
+                yaw = 90*M_PI/180;
 
                 quat = AngleAxisf(pitch, Vector3f::UnitX())
                     * AngleAxisf(roll, Vector3f::UnitY())
@@ -255,8 +248,6 @@ void GNC::Run()
                 att_msg.body_rate.x = 0;
                 att_msg.body_rate.y = 0;
                 att_msg.body_rate.z = 0;
-
-                //std::cout << "Quaternion" << std::endl << q.coeffs() << std::endl;
 
                 this->att_control_pub.publish(att_msg);
 

@@ -15,6 +15,8 @@
 #define M_PI 3.14159265358979323846  /* pi */
 #define R_EA 6378137.0
 #define ECCENTRICITY 0.08181919
+#define SEMI_MAJOR 6378137 // in meters
+#define SEMI_MINOR 6356752.3142 // in meters
 
 //using namespace geometry_msgs;
 using namespace Eigen;
@@ -22,7 +24,6 @@ using namespace std;
 
 struct Home{
     Vector3d lla;
-    double R_NE[3][3];
     Vector3d P_ecef;
 };
 
@@ -42,7 +43,7 @@ public:
     void convertLLA2NED(Vector3d lla, Vector3d& ned);
 
     // Home location
-    void sethome(Vector3d& lla);
+    void sethome(Vector3d lla);
     Vector3d gethome();
 
     // Waypoint properties
@@ -53,6 +54,9 @@ public:
     int getCurrentSeq();
 
     vector<MissionWP> getcurrentWaypoints();
+
+    bool HalfplaneCheck(Vector3d position, Vector3d r, Vector3d n);
+
 
 
 private:

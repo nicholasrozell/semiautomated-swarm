@@ -34,6 +34,7 @@ public:
 
     // Function call to run the GNC loop
     void Run();
+    void InitPID();
 
 private:
     // Subscriber functions
@@ -62,11 +63,12 @@ private:
     // ros publisher for sending att data
     ros::Publisher att_control_pub;
 
-
     Vector3d lla, local_vel, local_pos;
+    float dt;
 
     navigation nav;
     guidance guide;
+    PID course_pid, alt_pid, vel_pid;
 
     AttitudeTarget att_msg;
 
