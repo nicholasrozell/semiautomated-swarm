@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import rospy
-from mavros_msgs.msg import WaypointList, Waypoint
+from mavros_msgs.msg import WaypointList, Waypoint, home
 from mavros_msgs.srv import WaypointPush
 import pandas as pd
 from . import graph
 from .algorithms import RRTstar
-from .FrameConversions import NED2LLA
+from .FrameConversions import Frame
 import numpy as np
 
 def main():
@@ -17,6 +17,9 @@ def main():
 
     print('INITIALIZING\n')
     start_time = rospy.get_time()
+
+    frame = Frame()
+    frame.addRefLLA(home)
 
     dims = Graph.np_array((-10, 10), (-10, 10), (-100, -100))
     obstacles = []
@@ -30,7 +33,8 @@ def main():
     n = 5
     path = []
     case = 0
-    count = 0
+    # count = 0
+    start_index = 0
 
 
     while not rospy.is_shutdown():
@@ -50,10 +54,10 @@ def main():
         pathNED = np.asarray(path)
 
         wp_msg = []
-        start_index = count
+        # start_index = count
 
         for i in range(len(pathNED)):
-            pathLLA = NED2LLA(pathNED[i])
+            pathLLA = frame.ConvNED2LLA(pathNED[i])
 
             wp_point = Waypoint()
             # wp_point.frame = int(df.iloc[i].frame)
@@ -68,7 +72,7 @@ def main():
 
         resp = wp_push(start_index, wp_msg)
         print(resp)
-        count += n
+        start_index += n
         rate.sleep()
 
 if __name__ == '__main__':
