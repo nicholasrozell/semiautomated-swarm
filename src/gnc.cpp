@@ -199,7 +199,7 @@ void GNC::Run()
             if (WPSET && nav.getCurrentSeq() >= 0)
             {
                 curr_wp = nav.getCurrWaypoint();
-                curr_wp(2) += home(2);
+                //curr_wp(2) += home(2);
 
 
                 // convert WP to NED

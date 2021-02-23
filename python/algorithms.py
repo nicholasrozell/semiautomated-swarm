@@ -1,5 +1,5 @@
 import numpy as np
-from .utils import dist, angle
+from utils import dist, angle
 
 
 class BaseRRT:
@@ -15,7 +15,7 @@ class BaseRRT:
 
         self.alpha = np.radians(15)
         self.beta = np.radians(135)
-        self.range = 10
+        self.range = 700
         self.path = path
         self.waypoints = waypoints
         self.case = case
@@ -241,12 +241,12 @@ class RRTstar(BaseRRT):
 
     def search(self):
         self.G.add_node(self.x_init)
-        self.x_bot = self.G.agents[0].pos
+        # self.x_bot = self.G.agents[0].pos
         count = 0
         while count <= 400:
             r = self.shrinking_ball_radius()
             x_rand = self.local_sample_free()
-            x_nearest = self.nearest(x_rand, r)
+            x_nearest = self.brute_force(x_rand)
             x_new = self.steer(x_nearest, x_rand)
             if self.G.obstacle_free(x_new):
                 X_near = self.near(x_new, self.delta)
