@@ -128,8 +128,8 @@ void GNC::getHomeData(const HomePosition &msg)
     home_prev = nav.gethome();
 
     if (home(0)!= home_prev(0) ||
-        home(0)!= home_prev(0) ||
-        home(0)!= home_prev(0))
+        home(1)!= home_prev(1) ||
+        home(2)!= home_prev(2))
     {
         // if different from current home, then set
         nav.sethome(home);
