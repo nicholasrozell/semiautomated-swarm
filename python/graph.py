@@ -181,8 +181,3 @@ class Graphs:
         """Removes an obstacle from the graph."""
         for obstacle in obstacles:
             self.obstacles.remove(obstacle)
-
-    # def add_agent(self, pos=None, angle=None):
-    #     """docstring"""
-    #     color = PALETTE["accents"]
-    #     self.agents.append(Agent(color, pos, angle))
