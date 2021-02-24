@@ -3,9 +3,8 @@ import rospy
 from mavros_msgs.msg import WaypointList, Waypoint
 from mavros_msgs.srv import WaypointPush
 from mavros_msgs.msg import HomePosition
-import pandas as pd
 from graph import Graphs
-from algorithms import RRTstar
+from algorithms import RRTstar as 
 from FrameConversions import Frame
 import numpy as np
 
@@ -29,7 +28,21 @@ class PathPlanning:
 
             self.frame.addRefLLA(self.home_pos_data)
 
-    def run(self):
+    def main(self):
+        """
+        dims : graph's dimensions (numpy array of tuples)
+        obstacles : obstacles to be placed in the graph (list of shapely.Polygons)
+        home : home location (tuple)
+        init_state : start location (tuple)
+        goal_state : goal location (tuple)
+        delta : distance between nodes (int)
+        k : shrinking ball facotr (int)
+        n : number of waypoints to push (int)
+        path : list of waypoints (list of tuples)
+        case : case number to set behavior (int)
+
+        Units: meters
+        """
         rospy.init_node('RRTnode')
         rospy.wait_for_service('/control/waypoints')
         wp_push = rospy.ServiceProxy('/control/waypoints', WaypointPush)
@@ -42,17 +55,17 @@ class PathPlanning:
 
         dims = np.array([(-1500, 1500), (-1500, 1500), (-100, -100)])
         obstacles = []
+        home = (0.0, 0.0, -100.0)
+        init_state = (0.0, 0.0, -100.0)
+        goal_state = (1305.0, 870.0, -100.0)
+        delta = 200
+        k = 2.5
+        n = 2
 
         graph = Graphs(dims, obstacles)
-        home = (0, 0, -100)
-        init_state = (0, 0, -100)
-        goal_state = (1305, 870, -100)
-        delta = 200
-        k = 21000
-        n = 3
         path = []
         case = 0
-        # count = 0
+
         start_index = 0
 
         while not rospy.is_shutdown():
@@ -72,7 +85,7 @@ class PathPlanning:
 
             wp_msg = []
             # start_index = count
-            print(pathNED.shape)
+            # print(pathNED.shape)
 
             pathLLA = self.frame.ConvNED2LLA(pathNED.T)
             for i in range(len(pathNED)):
@@ -93,4 +106,4 @@ class PathPlanning:
 
 if __name__ == '__main__':
     pp = PathPlanning()
-    pp.run()
+    pp.main()

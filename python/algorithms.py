@@ -6,19 +6,33 @@ class BaseRRT:
     """
     Base class for rapidly-exploring random trees.
     """
-    def __init__(self, G, x_init, x_goal, delta, k, path, waypoints, case):
+    def __init__(self, G, x_init, x_goal, delta, k, path, n, case):
+        """
+        G : graph
+        x_init : initial node
+        x_goal : goal node
+        delta : distance between nodes, or length of an edge
+        k : factor for shrinking_ball_radius
+        path : point of waypoints to be pushed
+        n : index value to cut paths
+        case : number for cases
+        alpah : angle in which to constrain RRT steering
+        beta : angle in which the tree can grow
+        length : overall distance a tree can grow
+        """
         self.G = G
         self.x_init = x_init
         self.x_goal = x_goal
         self.delta = delta
         self.k = k
+        
+        self.path = []
+        self.n = n
+        self.case = case
 
         self.alpha = np.radians(15)
         self.beta = np.radians(135)
-        self.range = 700
-        self.path = path
-        self.waypoints = waypoints
-        self.case = case
+        self.length = 3
 
     def sample_free(self):
         """
@@ -26,15 +40,13 @@ class BaseRRT:
         """
         return tuple(np.random.uniform(self.G.span[:, 0], self.G.span[:, 1], self.G.span[:, 2]))
 
-    def local_sample_free(self):
+    def sample_free_local(self):
         """
         Selects a random node within the defined area.
         """
-        # if dist(self.x_init, self.x_goal) < self.range:
-        #     self.range = dist(self.x_init, self.x_goal)
-        r = self.delta * self.range * np.sqrt(np.random.uniform())
+        r = self.delta * self.length * np.sqrt(np.random.uniform())
         theta = np.random.uniform() * self.beta + (angle(self.x_init, self.x_goal) - self.beta/2)
-        return tuple((self.x_init[0] + r * np.cos(theta), self.x_init[1] + r * np.sin(theta), -100))
+        return tuple((self.x_init[0] + r * np.cos(theta), self.x_init[1] + r * np.sin(theta), self.G.span[2][0]))
 
     def nearest(self, v, r):
         """
@@ -46,7 +58,10 @@ class BaseRRT:
             if dist(v, node) <= min_dist:
                 min_dist = dist(v, node)
                 nearest_node = node
-        return nearest_node
+        try:
+            return nearest_node
+        except:
+            raise UnboundLocalError('Could not find a nearest node, due to k not being large enough value.')
 
     def near(self, pivot, r):
         """
@@ -122,11 +137,13 @@ class BaseRRT:
         if constrained_angle > upper_angle:
             x_prime = ((end[0] - start[0]) * np.cos(upper_angle - constrained_angle) - (end[1] - start[1]) * np.sin(upper_angle - constrained_angle)) + start[0]
             y_prime = ((end[0] - start[0]) * np.sin(upper_angle - constrained_angle) + (end[1] - start[1]) * np.cos(upper_angle - constrained_angle)) + start[1]
-            end = (x_prime, y_prime)
+            z_prime = self.G.span[2][0]
+            end = (x_prime, y_prime, z_prime)
         elif constrained_angle < lower_angle:
             x_prime = ((end[0] - start[0]) * np.cos(lower_angle - constrained_angle) - (end[1] - start[1]) * np.sin(lower_angle - constrained_angle)) + start[0]
             y_prime = ((end[0] - start[0]) * np.sin(lower_angle - constrained_angle) + (end[1] - start[1]) * np.cos(lower_angle - constrained_angle)) + start[1]
-            end = (x_prime, y_prime)
+            z_prime = self.G.span[2][0]
+            end = (x_prime, y_prime, z_prime)
         return end
 
     def connect_to_goal(self, goal, v):
@@ -151,8 +168,8 @@ class BaseRRT:
         return path
 
     def retain_path(self, start, end):
-        n = self.waypoints
-        # print('\ncase: ', self.case, '\n')
+        n = self.n
+        print('\ncase: ', self.case)
         # print('init: ', self.x_init, '\n')
         # print('init path: ', self.path, '\n')
         if self.case == 0:
@@ -184,7 +201,7 @@ class BaseRRT:
         d = self.G.dimensions
         leb_meas = (self.G.span[0][1] - self.G.span[0][0]) * (self.G.span[1][1] - self.G.span[1][0])  # <- estimated in practice
         zeta_D = (4.0/3.0) * np.pi * self.delta**3
-        gamma = (2**d*(1 + (1/d)) * leb_meas) * self.k
+        gamma = (2**d*(1 + (1/d)) * leb_meas)**self.k
         return max(int(((gamma / zeta_D) * (np.log10(self.G.num_nodes())/self.G.num_nodes())) ** (1 / d)), self.delta)
 
 
@@ -195,14 +212,38 @@ class RRT(BaseRRT):
     ref: Randomized Kindynamic Planning;
     Lavalle, Kuffner
     """
-    def __init__(self, G, x_init, x_goal, delta, k, path, waypoints, case):
-        super().__init__(G, x_init, x_goal, delta, k, path, waypoints, case)
+    def __init__(self, G, x_init, x_goal, delta, k, path, n, case):
+        super().__init__(G, x_init, x_goal, delta, k, path, n, case)
 
     def search(self):
         self.G.add_node(self.x_init)
         count = 0
         while count <= 400:
-            x_rand = self.local_sample_free()
+            x_rand = self.sample_free_local()
+            x_nearest = self.nearest(x_rand, self.shrinking_ball_radius())
+            x_new = self.steer(x_nearest, x_rand)
+            if self.G.obstacle_free(x_new):
+                self.G.add_node(x_new)
+                self.G.add_edge(x_nearest, x_new)
+            count += 1
+        return self.retain_path(self.x_init, self.brute_force(self.x_goal))
+
+
+class ConstrainedRRT(BaseRRT):
+    """
+    Class for the basic RRT algorithm.
+
+    ref: Randomized Kindynamic Planning;
+    Lavalle, Kuffner
+    """
+    def __init__(self, G, x_init, x_goal, delta, k, path, n, case):
+        super().__init__(G, x_init, x_goal, delta, k, path, n, case)
+
+    def search(self):
+        self.G.add_node(self.x_init)
+        count = 0
+        while count <= 400:
+            x_rand = self.sample_free_local()
             x_nearest = self.nearest(x_rand, self.shrinking_ball_radius())
             x_new = self.steer_constrained(x_nearest, x_rand)
             if self.G.obstacle_free(x_new):
@@ -212,15 +253,15 @@ class RRT(BaseRRT):
         return self.retain_path(self.x_init, self.brute_force(self.x_goal))
 
 
-class RRTstar(BaseRRT):
+class RRTStar(BaseRRT):
     """
-    Class for the optimal RRT algorithm
+    Class for the optimal RRT algorithm.
 
     ref: Sampling-based Algorithms for Optimal Motion Planning;
     Karaman, Frazzoli
     """
-    def __init__(self, G, x_init, x_goal, delta, k, path, waypoints, case):
-        super().__init__(G, x_init, x_goal, delta, k, path, waypoints, case)
+    def __init__(self, G, x_init, x_goal, delta, k, path, n, case):
+        super().__init__(G, x_init, x_goal, delta, k, path, n, case)
 
     def parent(self, v):
         """
@@ -241,12 +282,11 @@ class RRTstar(BaseRRT):
 
     def search(self):
         self.G.add_node(self.x_init)
-        # self.x_bot = self.G.agents[0].pos
         count = 0
         while count <= 400:
             r = self.shrinking_ball_radius()
-            x_rand = self.local_sample_free()
-            x_nearest = self.brute_force(x_rand)
+            x_rand = self.sample_free_local()
+            x_nearest = self.nearest(x_rand, r)
             x_new = self.steer(x_nearest, x_rand)
             if self.G.obstacle_free(x_new):
                 X_near = self.near(x_new, self.delta)
@@ -263,6 +303,5 @@ class RRTstar(BaseRRT):
                         x_parent = self.parent(x_near)
                         self.G.remove_edge(x_parent, x_near)
                         self.G.add_edge(x_new, x_near)
-                self.connect_to_goal(self.x_goal, x_new)
             count += 1
         return self.retain_path(self.x_init, self.brute_force(self.x_goal))

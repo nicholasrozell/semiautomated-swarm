@@ -11,7 +11,7 @@ import time as TIME
 import navpy
 
 from numpy.linalg import inv as matinv
-from pandas import read_excel
+# from pandas import read_excel
 
 class Frame:
     def __init__(self):
