@@ -5,8 +5,7 @@ class Graphs:
     """
     Class for directed graphs.
     """
-
-    def __init__(self, span, obstacles=None):
+    def __init__(self, span, obstacles=[]):
         self.graph_attr_dict_factory = dict
         self.adjlist_outer_dict_factory = dict
         self.adjlist_inner_dict_factory = dict
@@ -15,21 +14,13 @@ class Graphs:
         self.graph = self.graph_attr_dict_factory()
         self.span = span
         self.dimensions = len(span)
-
-        if obstacles is None:
-            self.obstacles = list()
-        else:
-            self.obstacles = obstacles
-        self.num_obstacles = self.obstacles
+        self.num_obstacles = obstacles
 
         self.nodes = set()
         self.edges = set()
         self._adj = self.adjlist_outer_dict_factory()
         self._pred = self.adjlist_outer_dict_factory()
         self._succ = self._adj
-
-        self.agents = []
-        self.i = 0
 
     def __contains__(self, v):
         """
@@ -109,7 +100,7 @@ class Graphs:
 
     def successors(self, v):
         """
-        Returns the neighbors of node v.
+        Returns the successors of node v.
         """
         try:
             return iter(self._succ[v])
@@ -118,7 +109,7 @@ class Graphs:
 
     def predecessors(self, v):
         """
-        Returns the preddecessor of node v.
+        Returns the predecessor of node v.
         """
         try:
             return iter(self._pred[v])
@@ -160,7 +151,7 @@ class Graphs:
 
     def obstacle_free(self, v):
         """
-        Checks if the node v is free an obstacle.
+        Checks if the node v is free of an obstacle.
         """
         node = Point(v)
         return not any(node.within(self.obstacles) for self.obstacles in self.num_obstacles)
@@ -173,11 +164,15 @@ class Graphs:
         return not any(edge.intersects(self.obstacles) for self.obstacles in self.num_obstacles)
 
     def add_obstacle(self, obstacles):
-        """Adds an obstacle to the graph."""
+        """
+        Adds an obstacle to the graph.
+        """
         for obstacle in obstacles:
             self.obstacles.append(obstacle)
 
     def remove_obstacle(self, obstacles):
-        """Removes an obstacle from the graph."""
+        """
+        Removes an obstacle from the graph.
+        """
         for obstacle in obstacles:
             self.obstacles.remove(obstacle)
