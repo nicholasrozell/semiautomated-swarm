@@ -4,7 +4,7 @@ from mavros_msgs.msg import WaypointList, Waypoint
 from mavros_msgs.srv import WaypointPush
 from mavros_msgs.msg import HomePosition
 from graph import Graphs
-from algorithms import RRTstar as 
+from algorithms import RRTStar as RRT
 from FrameConversions import Frame
 import numpy as np
 
@@ -69,7 +69,7 @@ class PathPlanning:
         start_index = 0
 
         while not rospy.is_shutdown():
-            rrt = RRTstar(graph, init_state, goal_state, delta, k, path, n, case)
+            rrt = RRT(graph, init_state, goal_state, delta, k, path, n, case)
             path, case = rrt.search()
             print(f'path len = {len(path)}')
             if case == 1:
