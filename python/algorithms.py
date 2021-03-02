@@ -14,7 +14,7 @@ class BaseRRT:
         self.k = k
 
         self.beta = np.radians(135)
-        self.length = 4
+        self.length = 3
         self.case = case
         self.path = path
         self.n = n
