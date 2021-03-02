@@ -7,12 +7,15 @@ from graph import Graph
 from algorithms import RRTStar as RRT
 from FrameConversions import Frame
 import numpy as np
+import shapely.geometry.point as Point
+from std_msgs.msg import Float64
 
 
 class PathPlanning:
     def __init__(self):
         self.home_pos_data = np.zeros(shape=(3,))
         self.frame = Frame()
+        self.heading = None
 
         print('INITIALIZING\n')
 
@@ -27,6 +30,9 @@ class PathPlanning:
             self.home_pos_data[2] = data.geo.altitude
 
             self.frame.addRefLLA(self.home_pos_data)
+
+    def global_heading(self, data):
+        self.heading = data
 
     def main(self):
         """
@@ -48,13 +54,14 @@ class PathPlanning:
         wp_push = rospy.ServiceProxy('/control/waypoints', WaypointPush)
 
         rospy.Subscriber('/mavros/home_position/home', HomePosition, self.home_pos_cb)
+        rospy.Subscriber('/mavros/global_position/compass_hdg', Float64, self.global_heading)
 
         rate = rospy.Rate(1)    # send msgs at 1 Hz
         start_time = rospy.get_time()
 
 
         dims = np.array([(-500, 2500), (-100, 2900), (-50, -50)])
-        obstacles = []
+        # obstacles = [Point(1000, 1000).buffer(200)]
         home = (0.0, 0.0, -50.0)
         init_state = (0.0, 0.0, -50.0)
         goal_state = (2400.0, 2800.0, -50.0)
@@ -62,7 +69,7 @@ class PathPlanning:
         k = 2.5
         n = 2
 
-        graph = Graph(dims, obstacles)
+        graph = Graph(dims)
         path = []
         case = 0
 
@@ -70,7 +77,7 @@ class PathPlanning:
 
         while not rospy.is_shutdown():
             rrt = RRT(graph, init_state, goal_state, delta, k, case, path, n)
-            path, case = rrt.search()
+            path, case = rrt.search(self.heading)
             print(f'path len = {len(path)}')
             if case == 1:
                 init_state = path[n]
