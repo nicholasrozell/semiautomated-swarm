@@ -62,7 +62,7 @@ class PathPlanning:
         k = 2.5
         n = 2
 
-        graph = Graphs(dims, obstacles)
+        graph = Graph(dims, obstacles)
         path = []
         case = 0
 
