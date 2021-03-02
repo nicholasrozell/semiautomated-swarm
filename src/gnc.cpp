@@ -184,7 +184,7 @@ void GNC::Run()
 
     // Set the first waypoint to home location
     prev_wp = home;
-    prev_wp(2) += 40;
+    prev_wp(2) += 50;
 
     // Wait till good GPS values are set
     while (lla.norm() <= 0)
@@ -211,7 +211,7 @@ void GNC::Run()
             if (WPSET && nav.getCurrentSeq() >= 0)
             {
                 curr_wp = nav.getCurrWaypoint();
-                curr_wp(2) += home(2);
+                //curr_wp(2) += home(2);
 
 
                 // convert WP to NED
