@@ -69,7 +69,7 @@ class PathPlanning:
         start_index = 0
 
         while not rospy.is_shutdown():
-            rrt = RRT(graph, init_state, goal_state, delta, k, path, n, case)
+            rrt = RRT(graph, init_state, goal_state, delta, k, case, path, n)
             path, case = rrt.search()
             print(f'path len = {len(path)}')
             if case == 1:
