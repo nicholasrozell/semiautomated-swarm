@@ -53,11 +53,11 @@ class PathPlanning:
         start_time = rospy.get_time()
 
 
-        dims = np.array([(-1500, 1500), (-1500, 1500), (-100, -100)])
+        dims = np.array([(-500, 2500), (-100, 2900), (-50, -50)])
         obstacles = []
         home = (0.0, 0.0, -100.0)
-        init_state = (0.0, 0.0, -100.0)
-        goal_state = (1305.0, 870.0, -100.0)
+        init_state = (0.0, 0.0, -50.0)
+        goal_state = (2400.0, 2800.0, -50.0)
         delta = 200
         k = 2.5
         n = 2
