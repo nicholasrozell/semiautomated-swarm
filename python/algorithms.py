@@ -31,7 +31,7 @@ class BaseRRT:
         """
         r = self.delta * self.length * np.sqrt(np.random.uniform())
         if self.case == 0:
-            theta = np.random.uniform() * self.beta + (np.radians(0) - self.beta/2)
+            theta = np.random.uniform() * self.beta + (angle3D(self.x_goal, self.x_init) - self.beta/2)
         if self.case != 0:
             theta = np.random.uniform() * self.beta + (angle3D(self.path[3], self.path[4]) - self.beta/2)
         return tuple((self.x_init[0] + r * np.cos(theta), self.x_init[1] + r * np.sin(theta), self.G.span[2][0]))  
