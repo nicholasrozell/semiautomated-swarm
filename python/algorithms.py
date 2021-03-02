@@ -1,5 +1,5 @@
 import numpy as np
-from .utils import dist, angle3D
+from utils import dist, angle3D
 
 
 class BaseRRT:
