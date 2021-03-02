@@ -7,7 +7,7 @@ guidance::guidance()
     Kpath = 0.01;
 
     // Orbit params
-    Korbit = 0.01;
+    Korbit = 0.1;
 
 }
 

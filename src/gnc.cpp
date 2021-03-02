@@ -101,17 +101,14 @@ bool GNC::getWaypointData(WaypointPush::Request &req,
             wp_temp.alt = req.waypoints[i].z_alt - home(2);
         }
 
-        // std::cout << i<< "," <<wp_temp.lat <<", "<<  msg.waypoints[i].x_lat << std::endl;
-
         wplist.push_back( wp_temp);
 
     }
     res.success = true;
     res.wp_transfered = req.waypoints.size();
 
-    if(!WPSET){
-
-        nav.appendWaypoints(req.start_index, wplist);
+    nav.appendWaypoints(req.start_index, wplist);
+    if(!WPSET){ 
         WPSET = true;
     }
     return true;
@@ -164,22 +161,37 @@ void GNC::Run()
 {
     double course;
     double course_c, alt_c;
+    float pitch, roll, yaw(90*M_PI/180); // yaw is fixed since not used
+
+    double rho(5), lambda(1);
+
+
     Vector3d lla_temp, vel_temp, ned_currpos, ned_wp, ned_wp_prev;
-    Vector3d curr_wp, prev_wp, home, r, q;
+    Vector3d curr_wp, prev_wp, home, r, q, c;
     Quaternionf quat;
 
     InitPID();
 
-    // Loop until home is set
+    // Wait until home is set
     while (!HOMESET)
     {
         ros::spinOnce();
         ros::Duration(0.5).sleep();
     }
 
+    // Once home is set, get the current value
     home = nav.gethome();
+
+    // Set the first waypoint to home location
     prev_wp = home;
     prev_wp(2) += 40;
+
+    // Wait till good GPS values are set
+    while (lla.norm() <= 0)
+    {
+        ros::spinOnce();
+        ros::Duration(0.5).sleep();
+    }
 
     while (ros::ok()){
 
@@ -199,39 +211,56 @@ void GNC::Run()
             if (WPSET && nav.getCurrentSeq() >= 0)
             {
                 curr_wp = nav.getCurrWaypoint();
-                //curr_wp(2) += home(2);
+                curr_wp(2) += home(2);
 
 
                 // convert WP to NED
                 nav.convertLLA2NED(curr_wp, ned_wp);
                 nav.convertLLA2NED(prev_wp, ned_wp_prev);
 
-                // ROS_INFO_STREAM("currpos "<<ned_currpos(0) <<", " << ned_currpos(1) << ", "<< ned_currpos(2));
-                // ROS_INFO_STREAM("NED Wp "<<ned_wp(0) <<", " << ned_wp(1) << ", "<< ned_wp(2));
-                // ROS_INFO_STREAM("NED WpPrev "<<ned_wp_prev(0) <<", " << ned_wp_prev(1) << ", "<< ned_wp_prev(2));
-                // ROS_INFO_STREAM("NED q "<<q(0) <<", " << q(1) << ", "<< q(2));
+                ROS_INFO_STREAM("currpos "<<ned_currpos(0) <<", " << ned_currpos(1) << ", "<< ned_currpos(2));
+                ROS_INFO_STREAM("NED Wp "<<ned_wp(0) <<", " << ned_wp(1) << ", "<< ned_wp(2));
+                ROS_INFO_STREAM("NED WpPrev "<<ned_wp_prev(0) <<", " << ned_wp_prev(1) << ", "<< ned_wp_prev(2));
+                ROS_INFO_STREAM("NED q "<<q(0) <<", " << q(1) << ", "<< q(2));
 
-                r = ned_wp_prev;
-                q = ned_wp - ned_wp_prev;
-                q = q/q.norm();
+                vector<MissionWP> WP = nav.getcurrentWaypoints();
+                std::cout << nav.getCurrentSeq() << ", " << WP.size() << std::endl;
+                bool test = nav.getCurrentSeq() < WP.size()-1;
+                std::cout << test << std::endl;
 
 
-                guide.straightlineFollowing(r, q, ned_currpos, course, alt_c, course_c);
+                if (test){
+                    std::cout << "Staline" << std::endl;
+                    r = ned_wp_prev;
+                    q = ned_wp - ned_wp_prev;
+                    q = q/q.norm();
+
+                    guide.straightlineFollowing(r, q, ned_currpos, course, alt_c, course_c);
+
+                }
+                else
+                {
+                    std::cout << "orbt" << std::endl;
+                    c = ned_wp;
+                    guide.orbitFollowing(c, rho, lambda, ned_currpos, course, alt_c, course_c);
+
+                }
+
+
+
+                //
+
 
                 if(nav.HalfplaneCheck(ned_currpos, ned_wp, q)){
                    nav.updateWaypointCount();
                    prev_wp = curr_wp;
                 }
 
-                float pitch, roll, yaw;
-
                 pitch = alt_pid.controller_output(alt_c, -1*ned_currpos(2), false);
                 //std::cout << "pitch = " << pitch << ", alt_c = " <<alt_c << ", curr height = " << -ned_currpos(2) << std::endl;
 
                 roll = course_pid.controller_output(course_c, course, false);
                 //std::cout << "roll = " << roll << ", course_c = " <<course_c << ", curr course = " << course << std::endl;
-
-                yaw = 90*M_PI/180;
 
                 quat = AngleAxisf(pitch, Vector3f::UnitX())
                     * AngleAxisf(roll, Vector3f::UnitY())

@@ -2,7 +2,7 @@
 
 navigation::navigation()
 {
-    curr_seq = 2;
+    curr_seq = 1;
 
     // presets
     home.lla(0) = 0;

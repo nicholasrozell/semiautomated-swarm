@@ -14,6 +14,9 @@
 #include <mavros_msgs/WaypointPush.h>
 #include <mavros_msgs/AttitudeTarget.h>
 #include <mavros_msgs/HomePosition.h>
+#include <mavros_msgs/CommandTOL.h>
+#include <mavros_msgs/CommandBool.h>
+#include <mavros_msgs/SetMode.h>
 
 #include <sensor_msgs/NavSatFix.h>
 #include <geometry_msgs/TwistStamped.h>
