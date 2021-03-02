@@ -33,7 +33,7 @@ class BaseRRT:
         # if self.case == 0:
         #     theta = np.random.uniform() * self.beta + (np.radians(0) - self.beta/2)
         # if self.case != 0:
-        theta = np.random.uniform() * self.beta + (heading) - self.beta/2)
+        theta = np.random.uniform() * self.beta + ((heading) - self.beta/2)
         return tuple((self.x_init[0] + r * np.cos(theta), self.x_init[1] + r * np.sin(theta), self.G.span[2][0]))  
 
     def nearest(self, v , r):
