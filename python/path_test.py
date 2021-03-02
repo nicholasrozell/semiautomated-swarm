@@ -3,7 +3,7 @@ import rospy
 from mavros_msgs.msg import WaypointList, Waypoint
 from mavros_msgs.srv import WaypointPush
 from mavros_msgs.msg import HomePosition
-from graph import Graphs
+from graph import Graph
 from algorithms import RRTStar as RRT
 from FrameConversions import Frame
 import numpy as np
