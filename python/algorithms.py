@@ -25,15 +25,15 @@ class BaseRRT:
         """
         return tuple(np.random.uniform(self.G.span[:, 0], self.G.span[:, 1], self.G.span[:, 2]))
 
-    def sample_free_local(self):
+    def sample_free_local(self, heading):
         """
         dcostring
         """
         r = self.delta * self.length * np.sqrt(np.random.uniform())
-        if self.case == 0:
-            theta = np.random.uniform() * self.beta + (angle3D(self.x_goal, self.x_init) - self.beta/2)
-        if self.case != 0:
-            theta = np.random.uniform() * self.beta + (angle3D(self.path[3], self.path[4]) - self.beta/2)
+        # if self.case == 0:
+        #     theta = np.random.uniform() * self.beta + (np.radians(0) - self.beta/2)
+        # if self.case != 0:
+        theta = np.random.uniform() * self.beta + (heading) - self.beta/2)
         return tuple((self.x_init[0] + r * np.cos(theta), self.x_init[1] + r * np.sin(theta), self.G.span[2][0]))  
 
     def nearest(self, v , r):
@@ -320,12 +320,12 @@ class RRTStar(BaseRRT):
                 self.G.remove_edge(x_parent, x_near)
                 self.G.add_edge(x_new, x_near)
 
-    def search(self):
+    def search(self, heading):
         self.G.add_node(self.x_init)
         node_count = 0
         while node_count <= 350:
             r = self.shrinking_ball_radius()
-            x_rand = self.sample_free_local()
+            x_rand = self.sample_free_local(heading)
             x_nearest = self.nearest(x_rand, r)
             x_new = self.steer(x_nearest, x_rand)
             if self.G.collision_free(x_new, x_nearest):
