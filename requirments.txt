@@ -1,4 +1,4 @@
 numpy==1.19.5
 Shapely==1.7.1
-nector==0.7.6
+nvector==0.7.6
 navpy==1.0
