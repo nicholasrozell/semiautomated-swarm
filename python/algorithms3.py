@@ -36,7 +36,7 @@ class BaseRRT:
         # theta = np.random.uniform() * self.beta + ((heading) - self.beta/2)
         return tuple((self.x_init[0] + r * np.cos(theta), self.x_init[1] + r * np.sin(theta), self.G.span[2][0]))  
 
-    def nearest(self, v , r):
+    def nearest(self, v, r):
         """
         Finds the nrearest neighbor to the node v within a ball radius.
         """
@@ -129,7 +129,7 @@ class BaseRRT:
         path.reverse()
         return path
 
-    def compute_trajectory(self):
+    def compute_trajectory(self, pos):
         """
         docstring
         """
@@ -138,33 +138,47 @@ class BaseRRT:
             if self.is_leaf_node(n):
                 leaves.append(n)
         goal = self.find_leaf(leaves)
-        return self.find_path(goal)
+        return self.find_path(goal, pos)
 
-    def find_path(self, goal):
+    def find_path(self, goal, pos):
         """
         docstring
         """
         if self.case == 0:
             self.path = self.construct_path(self.x_init, goal)
+            waypoint = self.nearest_waypoint(pos)
+            self.n = self.path.index(waypoint) + 1
             self.case = 1
-        elif self.case == 1:
             del self.path[self.n:]
+        elif self.case == 1:
+            waypoint = self.nearest_waypoint(pos)
+            self.n = self.path.index(waypoint) + 1
+            del self.path[self.n:]
+            del self.path[:self.n]
             segment = self.construct_path(self.x_init, goal)
+            del segment[0]
+            del segment[self.n+1:]
             self.path = self.path + segment
             self.case = 2
         elif self.case == 2:
+            waypoint = self.nearest_waypoint(pos)
+            self.n = self.path.index(waypoint) + 1
             del self.path[:self.n]
             del self.path[self.n:]
             segment = self.construct_path(self.x_init, goal)
+            del segment[:self.n]
+            del segment[self.n+1:]
             self.path = self.path + segment
             if dist(self.x_init, self.x_goal) < self.delta * 2:
                 self.case = 3
         elif self.case == 3:
+            waypoint = self.nearest_waypoint(pos)
+            self.n = self.path.index(waypoint) + 1
             del self.path[:self.n]
             segment = self.construct_path(self.x_init, goal)
             self.path = self.path + segment
             self.case = 2
-        return self.path, self.case
+        return self.path, self.case, self.n
 
     def is_leaf_node(self, v):
         """
@@ -199,8 +213,15 @@ class BaseRRT:
                     farthest = leaf
             return farthest
 
-    def depth(self, v):
-        pass
+    def nearest_waypoint(self, pos):
+        min_dist = float('inf')
+        for wp in self.path:
+            if pos == wp:
+                continue
+            elif dist(pos, wp) <= min_dist:
+                min_dist = dist(pos, wp)
+                nearest = wp
+        return nearest
 
 
 class RRT(BaseRRT):
@@ -321,7 +342,7 @@ class RRTStar(BaseRRT):
                 self.G.remove_edge(x_parent, x_near)
                 self.G.add_edge(x_new, x_near)
 
-    def search(self):
+    def search(self, pos):
         self.G.add_node(self.x_init)
         node_count = 0
         while node_count <= 250:
@@ -335,23 +356,8 @@ class RRTStar(BaseRRT):
                 self.find_parent(x_new, x_nearest, X_near)
                 self.rewire_neighbors(X_near, x_new)
 
-            # if self.G.collision_free(x_new, x_nearest):
-            #     X_near = self.near(x_new, self.delta)
-            #     self.G.add_node(x_new)
-            #     x_min = x_nearest
-            #     c_min = self.cost(x_nearest) + dist(x_nearest, x_new)
-            #     for x_near in X_near:
-            #         if self.G.collision_free(x_near, x_new) and self.cost(x_near) + dist(x_new, x_near) < c_min:
-            #             x_min = x_near
-            #             c_min = self.cost(x_near) + dist(x_near, x_new)
-            #     self.G.add_edge(x_min, x_new)
-            #     for x_near in X_near:
-            #         if self.G.collision_free(x_new, x_near) and self.cost(x_new) + dist(x_new, x_near) < self.cost(x_near):
-            #             x_parent = self.parent(x_near)
-            #             self.G.remove_edge(x_parent, x_near)
-            #             self.G.add_edge(x_new, x_near)
             node_count += 1
-        return self.compute_trajectory()
+        return self.compute_trajectory(pos)
         # return self.compute_trajectory(self.x_init, self.brute_force(self.x_goal))  # old method
 
 

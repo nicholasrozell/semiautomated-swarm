@@ -5,6 +5,7 @@ from mavros_msgs.msg import WaypointList, Waypoint
 from mavros_msgs.srv import WaypointPush
 from mavros_msgs.msg import HomePosition
 from std_msgs.msg import Float64
+from sensor_msgs.msg import NavSatFix
 
 from FrameConversions import Frame
 from graph import Graph
@@ -12,15 +13,17 @@ from algorithms import RRTStar as RRT
 from views import draw
 
 from shapely.geometry.point import Point
+from shapely.geometry import Polygon
 
 
 class PathPlanning:
     def __init__(self):
+        print('\nInitializing.')
+
         self.home_pos_data = np.zeros(shape=(3,))
+        self.position = np.zeros(shape=(3,1))
         self.frame = Frame()
         self.heading = None
-
-        print('\nInitializing.')
 
     def home_pos_cb(self, data):
         print("Callback.")
@@ -37,6 +40,17 @@ class PathPlanning:
 
     def global_heading(self, data):
         self.heading = data
+
+    def global_position(self, data):
+        self.position[0] = data.latitude
+        self.position[1] = data.longitude
+        self.position[2] = data.altitude
+
+        self.position = self.frame.ConvLLA2NED(self.position)
+
+        self.pos = np.ndarray.tolist(self.position.reshape((3,)))
+        self.pos[2] = -50
+        self.pos = tuple(self.pos)
 
     def main(self):
         """
@@ -59,17 +73,25 @@ class PathPlanning:
 
         rospy.Subscriber('/mavros/home_position/home', HomePosition, self.home_pos_cb)
         rospy.Subscriber('/mavros/global_position/compass_hdg', Float64, self.global_heading)
+        rospy.Subscriber('/mavros/global_position/global', NavSatFix, self.global_position)
 
         rate = rospy.Rate(1)    # send msgs at 1 Hz
         start_time = rospy.get_time()
         rate.sleep()
 
-
         dims = np.array([(-500, 2500), (-100, 2900), (-50, -50)])
-        obstacles = [(Point(1000, 1000).buffer(500))]
-        init_state = (0.0, 0.0, -50.0)
-        goal_state = (2400.0, 2800.0, -50.0)
-        delta = 100
+        # obstacles = [(Point(1250, 1000).buffer(200)), 
+        #              (Point(1500, 1500).buffer(200)),
+        #              (Point(750, 1250).buffer(200)),
+        #              (Point(800, 650).buffer(200)),
+        #              (Point(1500, 500).buffer(200)),
+        #              (Point(1800, 1000).buffer(200)),
+        #              (Point(2000, 1400).buffer(200)),
+        #              (Point(1200, 1800).buffer(200))]
+        obstacles = [(Point(1400, 1000).buffer(1200))] # big obstacle 
+        init_state = self.pos
+        goal_state = (2300.0, 2600.0, -50.0)
+        delta = 50
         k = 2.5
         n = 2
 
@@ -93,7 +115,6 @@ class PathPlanning:
                 break
 
             rate.sleep()
-            print('Clearing graph.')
             graph.clear()
             pathNED = np.asarray(path)
 
@@ -114,7 +135,7 @@ class PathPlanning:
 
             # print(wp_msg)
             resp = wp_push(start_index, wp_msg)
-            # print(resp)
+            print(resp,'\n')
             start_index += n
             rate.sleep()
 

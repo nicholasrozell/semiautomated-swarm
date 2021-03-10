@@ -25,7 +25,6 @@ class Frame:
     def ConvLLA2NED(self, LLA_mat):
 
         LLA_ned = np.zeros(LLA_mat.shape)
-
         for i in range(LLA_mat.shape[1]):
             point = self.wgs84.GeoPoint(latitude=LLA_mat[0,i], longitude=LLA_mat[1,i], z=LLA_mat[2,i], degrees=True)
 
@@ -42,4 +41,4 @@ class Frame:
     def ConvNED2LLA(self, NED):
         # NED should be 1X3 array
         lat, lon, alt = navpy.ned2lla(NED, self.LLAref[0], self.LLAref[1], self.LLAref[2])
-        return lat,lon, alt
+        return lat, lon, alt
