@@ -128,15 +128,9 @@ algrotihm run-down
 7 update_obstacles(obstacles)
 
     for obstacle in obstacles:
-
         if obstacle in graph obstacles or list of obstacles:
-        
             for obstacle in graph obstacles:
-            
                 remove obstacles from graph obstacles
-                
     if obstacles not in graph obstacles and obstacles:
-
         for obstacle in obstacles:
-        
             Add obstacle to graph obstacles
