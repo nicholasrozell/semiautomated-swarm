@@ -11,132 +11,132 @@ algrotihm run-down
 
 1 search()
 
-Add node x_init to graph
+    Add node x_init to graph
 
-count = 0
+    count = 0
 
-while 'critera':
+    while 'critera':
 
-    r = shrinking_ball_radius
-    
-    if rrt obstacles != graph obstacles:
-    
-        update obstacles with rrt obstacles
+        r = shrinking_ball_radius
         
-        propagate descendents
+        if rrt obstacles != graph obstacles:
         
-    x_rand = local_random_sample
-    
-    x_nearest = nearest_node
-   
-    x_new = steer
-    
-    X_near = extend
-    
-    if x_new is an orphan:
-    
-        add x_new to list of orphans
+            update obstacles with rrt obstacles
+            
+            propagate descendents
+            
+        x_rand = local_random_sample
         
-    if x_new is in the graph:
+        x_nearest = nearest_node
     
-        rewire_neighbors
+        x_new = steer
         
-        reduce_inconsistency
+        X_near = extend
         
-    add 1 to count
+        if x_new is an orphan:
+        
+            add x_new to list of orphans
+            
+        if x_new is in the graph:
+        
+            rewire_neighbors
+            
+            reduce_inconsistency
+            
+        add 1 to count
 
 2 extend(x_new, x_nearest, r)
 
-X_near = near
+    X_near = near
 
-Add node x_new to graph
+    Add node x_new to graph
 
-find_parent
+    find_parent
 
-3 find_parent(x_new, x_min, x_near)
+    3 find_parent(x_new, x_min, x_near)
 
-if collision_free:
+    if collision_free:
 
-    minimum cost
-    
-    for x_near in X_near"
-    
-        if collision_free and cost < minimum cost:
+        minimum cost
         
-            x_min = x_near
+        for x_near in X_near"
+        
+            if collision_free and cost < minimum cost:
             
-            minimum cost = cost
-            
-    Add edge (x_min, x_new) to graph
+                x_min = x_near
+                
+                minimum cost = cost
+                
+        Add edge (x_min, x_new) to graph
 
 4 rewire neighbors(x_new, X_near)
 
-for x_near in X_near:
+    for x_near in X_near:
 
-    if collision free and cost of new < cost of near:
-    
-        set parent to parent of x_near
+        if collision free and cost of new < cost of near:
         
-        if no parent:
-        
-            continue
+            set parent to parent of x_near
             
-        remove edge (x_parent, x_near) from graph
-        
-        add edge (x_new, x_near) to graph
+            if no parent:
+            
+                continue
+                
+            remove edge (x_parent, x_near) from graph
+            
+            add edge (x_new, x_near) to graph
 
 5 propogate_descendents()
 
-for n in graph nodes:
+    for n in graph nodes:
 
-    if n in obstacle:
-    
-        parent = parent(n)
+        if n in obstacle:
         
-        if parent exists:
-        
-            remove edge (parent, n) from graph
+            parent = parent(n)
+            
+            if parent exists:
+            
+                remove edge (parent, n) from graph
 
 6 reduce_inconsistency()
 
-if no orphans:
+    if no orphans:
 
-    return
-    
-leaves = []
-
-for n in graph nodes:
-
-    if n is a leaf and not a orphan:
-    
-        Add n to list, leaves
+        return
         
-for n in orphans:
+    leaves = []
 
-    if n is not in an obstacle:
-   
-        nearest = brute_force(n, leaves)
+    for n in graph nodes:
+
+        if n is a leaf and not a orphan:
         
-        if (nearest, n) collision free:
-        
-            Add edge (nearest, n) to graph
+            Add n to list, leaves
             
-            Add n to leaves
+    for n in orphans:
+
+        if n is not in an obstacle:
+    
+            nearest = brute_force(n, leaves)
             
-            Remove n from orphans
+            if (nearest, n) collision free:
+            
+                Add edge (nearest, n) to graph
+                
+                Add n to leaves
+                
+                Remove n from orphans
 
 7 update_obstacles(obstacles)
 
-for obstacle in obstacles:
-
-    if obstacle in graph obstacles or list of obstacles:
-    
-        for obstacle in graph obstacles:
-        
-            remove obstacles from graph obstacles
-            
-if obstacles not in graph obstacles and obstacles:
-
     for obstacle in obstacles:
-    
-        Add obstacle to graph obstacles
+
+        if obstacle in graph obstacles or list of obstacles:
+        
+            for obstacle in graph obstacles:
+            
+                remove obstacles from graph obstacles
+                
+    if obstacles not in graph obstacles and obstacles:
+
+        for obstacle in obstacles:
+        
+            Add obstacle to graph obstacles
