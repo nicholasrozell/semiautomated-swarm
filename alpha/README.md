@@ -4,7 +4,7 @@ algorithm3 is the "3D" variant of all search algorithms
 
 view3 is the "3D" variant for drawing the graph
 
-Use RRTStarV2 it is the newest variation
+Use RRTStarV2, it is the newest variation
 
 
 algrotihm run-down
