@@ -54,6 +54,7 @@ algrotihm run-down
             add edge (x_new, x_near) to graph
 
 5 propogate_descendents()
+
     for n in graph nodes:
         if n in obstacle:
             parent = parent(n)
