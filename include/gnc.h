@@ -10,6 +10,7 @@
 #include <pid.h>
 
 #include <ros/ros.h>
+#include <mavros_msgs/Waypoint.h>
 #include <mavros_msgs/WaypointList.h>
 #include <mavros_msgs/WaypointPush.h>
 #include <mavros_msgs/AttitudeTarget.h>
@@ -50,6 +51,8 @@ private:
     bool getWaypointData(mavros_msgs::WaypointPush::Request &req,
                          mavros_msgs::WaypointPush::Response &res);
 
+    void PublishWpPath();
+
     // Node definition
     ros::NodeHandlePtr nav_node;
 
@@ -65,6 +68,7 @@ private:
 
     // ros publisher for sending att data
     ros::Publisher att_control_pub;
+    ros::Publisher Waypoint_pub;
 
     Vector3d lla, local_vel, local_pos;
     float dt;
@@ -74,6 +78,7 @@ private:
     PID course_pid, alt_pid, vel_pid;
 
     AttitudeTarget att_msg;
+    WaypointList wp_msg;
 
     bool HOMESET, WPSET;
 

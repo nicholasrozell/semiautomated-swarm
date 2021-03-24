@@ -32,8 +32,9 @@ GNC::GNC()
     std::string planningdata_service = "/control/waypoints";
     this->waypoint_service = this->nav_node->advertiseService(planningdata_service, &GNC::getWaypointData, this);
 
-    // create a service to update the waypoints
     this->att_control_pub = this->nav_node->advertise<mavros_msgs::AttitudeTarget>("/mavros/setpoint_raw/attitude", 10);
+
+    this->Waypoint_pub = this->nav_node->advertise<mavros_msgs::WaypointList>("/control/path", 10);
 
     lla(0) = 0;
     lla(1) = 0;
@@ -78,11 +79,36 @@ void GNC::getVelocityData(const TwistStamped& msg)
     local_vel(2) = msg.twist.linear.z;
 }
 
+void GNC::PublishWpPath()
+{
+    WaypointList wp_msg;
+
+    wp_msg.current_seq = nav.getCurrentSeq();
+
+    vector<MissionWP> path = nav.getcurrentWaypoints();
+
+    std::cout << "pathsize = " << path.size() << std::endl;
+    for (std::vector<MissionWP>::iterator it = path.begin(); it != path.end(); ++it)
+    {
+        //std::cout << path.at(i).lat << std::endl;
+
+        Waypoint wp;
+        wp.x_lat = (*it).lat;
+        wp.y_long = (*it).lon;
+        wp.z_alt = (*it).alt;
+
+
+        wp_msg.waypoints.push_back(wp);
+    }
+    this->Waypoint_pub.publish(wp_msg);
+}
+
 bool GNC::getWaypointData(WaypointPush::Request &req,
                           WaypointPush::Response &res)
 {
 
-    std::cout << req.start_index << std::endl;
+    std::cout << "start_index = "<< req.start_index << std::endl;
+    std::cout << "Total Wp got = "<< req.waypoints.size() << std::endl;
 
     vector<MissionWP> wplist;
     MissionWP wp_temp;
@@ -208,11 +234,12 @@ void GNC::Run()
                 course += 2*M_PI;
             }
 
+            PublishWpPath();
+
             if (WPSET && nav.getCurrentSeq() >= 0)
             {
                 curr_wp = nav.getCurrWaypoint();
                 //curr_wp(2) += home(2);
-
 
                 // convert WP to NED
                 nav.convertLLA2NED(curr_wp, ned_wp);
@@ -225,12 +252,12 @@ void GNC::Run()
 
                 vector<MissionWP> WP = nav.getcurrentWaypoints();
                 std::cout << nav.getCurrentSeq() << ", " << WP.size() << std::endl;
-                bool test = nav.getCurrentSeq() < WP.size()-1;
-                std::cout << test << std::endl;
+                bool motion_type = nav.getCurrentSeq() < WP.size()-1;
+                //std::cout << motion_type << std::endl;
 
 
-                if (test){
-                    std::cout << "Staline" << std::endl;
+                if (motion_type){
+                    //std::cout << "Executing straightline manoeuvre" << std::endl;
                     r = ned_wp_prev;
                     q = ned_wp - ned_wp_prev;
                     q = q/q.norm();
@@ -240,16 +267,11 @@ void GNC::Run()
                 }
                 else
                 {
-                    std::cout << "orbt" << std::endl;
+                    //std::cout << "Executing orbit manoeuvre" << std::endl;
                     c = ned_wp;
                     guide.orbitFollowing(c, rho, lambda, ned_currpos, course, alt_c, course_c);
 
                 }
-
-
-
-                //
-
 
                 if(nav.HalfplaneCheck(ned_currpos, ned_wp, q)){
                    nav.updateWaypointCount();
