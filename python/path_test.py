@@ -12,6 +12,7 @@ from algorithms import RRTStar as RRT
 from views import draw
 
 from shapely.geometry.point import Point
+from shapely.geometry import Polygon
 
 
 class PathPlanning:
@@ -66,34 +67,24 @@ class PathPlanning:
 
 
         dims = np.array([(-500, 2500), (-100, 2900), (-50, -50)])
-        obstacles = [(Point(1000, 1000).buffer(500))]
+        # obstacles = [(Point(1400, 1000).buffer(1200))] # big obstacle 
         init_state = (0.0, 0.0, -50.0)
-        goal_state = (2400.0, 2800.0, -50.0)
+        goal_state = (2300.0, 2600.0, -50.0)
         delta = 100
         k = 2.5
         n = 2
 
-        graph = Graph(dims, obstacles)
-        path = []
+        graph = Graph(dims)
+        path = None
         case = 0
 
         start_index = 0
 
         while not rospy.is_shutdown():
             rrt = RRT(graph, init_state, goal_state, delta, k, case, path, n)
-            path, case = rrt.search()
-            # print(f'path len = {len(path)}')
-            if case == 1:
-                init_state = path[n]
-            elif case == 2:
-                init_state = path[n + n]
-            elif case == 3:
-                init_state = path[-n]
-                print('Goal reached.')
-                break
+            path = rrt.search()
 
             rate.sleep()
-            print('Clearing graph.')
             graph.clear()
             pathNED = np.asarray(path)
 
@@ -114,7 +105,7 @@ class PathPlanning:
 
             # print(wp_msg)
             resp = wp_push(start_index, wp_msg)
-            # print(resp)
+            print(resp,'\n')
             start_index += n
             rate.sleep()
 
