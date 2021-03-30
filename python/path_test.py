@@ -5,6 +5,7 @@ from mavros_msgs.msg import WaypointList, Waypoint
 from mavros_msgs.srv import WaypointPush
 from mavros_msgs.msg import HomePosition
 from std_msgs.msg import Float64
+from sensor_msgs.msg import NavSatFix
 
 from FrameConversions import Frame
 from graph import Graph
@@ -18,13 +19,14 @@ from shapely.geometry import Polygon
 class PathPlanning:
     def __init__(self):
         self.home_pos_data = np.zeros(shape=(3,))
+        self.position = np.zeros(shape=(3,1))
         self.frame = Frame()
         self.heading = None
 
-        print('\nInitializing.')
+        print('\nINITIALIZING')
 
     def home_pos_cb(self, data):
-        print("Callback.")
+        print("CALLBACK\n")
         # Update only if new home is set in controller
         if (data.geo.latitude != self.home_pos_data[0] or
                 data.geo.longitude != self.home_pos_data[1] or
@@ -34,10 +36,20 @@ class PathPlanning:
             self.home_pos_data[2] = data.geo.altitude
 
             self.frame.addRefLLA(self.home_pos_data)
-            print('Reference set.\n')
+            print('Reference set\n')
 
     def global_heading(self, data):
         self.heading = data
+
+    def global_position(self, data):
+        self.position[0] = data.latitude
+        self.position[1] = data.longitude
+        self.position[2] = data.altitude
+        self.position = self.frame.ConvLLA2NED(self.position)
+
+        self.pos = np.ndarray.tolist(self.position.reshape((3,)))
+        self.pos[2] = -50
+        self.pos = tuple(self.pos)
 
     def main(self):
         """
@@ -60,6 +72,7 @@ class PathPlanning:
 
         rospy.Subscriber('/mavros/home_position/home', HomePosition, self.home_pos_cb)
         rospy.Subscriber('/mavros/global_position/compass_hdg', Float64, self.global_heading)
+        rospy.Subscriber('/mavros/global_position/global', NavSatFix, self.global_position)
 
         rate = rospy.Rate(1)    # send msgs at 1 Hz
         start_time = rospy.get_time()
@@ -67,24 +80,28 @@ class PathPlanning:
 
 
         dims = np.array([(-500, 2500), (-100, 2900), (-50, -50)])
-        # obstacles = [(Point(1400, 1000).buffer(1200))] # big obstacle 
-        init_state = (0.0, 0.0, -50.0)
-        goal_state = (2300.0, 2600.0, -50.0)
+        init = self.pos
+        goal = (2300.0, 2600.0, -50.0)
         delta = 100
         k = 2
 
         graph = Graph(dims)
         path = None
+        obstacles = None
 
         start_index = 0
 
         print('Calculating Trajectory...')
         while not rospy.is_shutdown():
-            rrt = RRT(graph, init_state, goal_state, delta, k, path)
+            # print(self.heading)
+            # error
+            rrt = RRT(graph, init, goal, delta, k, path, obstacles)
             path = rrt.search()
 
-            init_state = path[-1]
-
+            init = path[path.index(rrt.brute_force(self.pos, path))+1]
+            del path[:path.index(init)+1]
+            print(path)
+            print(len(path))
             rate.sleep()
             graph.clear()
             
@@ -107,9 +124,13 @@ class PathPlanning:
 
             # print(wp_msg)
             resp = wp_push(start_index, wp_msg)
-            print(resp,'\n')
-            start_index += n
+            # print(resp,'\n')
+            start_index += len(path)
             rate.sleep()
+
+            if goal in path:
+                print('Goal Reached')
+                break
 
 if __name__ == '__main__':
     pp = PathPlanning()
