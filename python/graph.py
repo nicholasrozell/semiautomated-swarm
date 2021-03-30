@@ -7,19 +7,19 @@ class Graph:
     """
     def __init__(self, span, obstacles=[]):
         self.graph_attr_dict_factory = dict
-        self.node_dict_factory = dict
+        self.node_set_factory = set
         self.node_attr_dict_factory = dict
         self.adjlist_outer_dict_factory = dict
         self.adjlist_inner_dict_factory = dict
-        self.edge_list_factory = list
+        self.edge_set_factory = set
         self.edge_attr_dict_factory = dict
 
-        self.graph = self.graph_attr_dict_factory()
-        self._node = self.node_dict_factory()
-        self._adj = self.adjlist_outer_dict_factory()
-        self._pred = self.adjlist_outer_dict_factory()
-        self._succ = self._adj
-        self._edge = self.edge_list_factory()
+        self.graph = self.graph_attr_dict_factory()  # dictionary for graph attributes
+        self._node = self.node_set_factory()  # empty node set
+        self._adj = self.adjlist_outer_dict_factory()  # empty adjacency dict
+        self._pred = self.adjlist_outer_dict_factory()  # predecessor
+        self._succ = self._adj  # successor
+        self._edge = self.edge_set_factory()  # empty edge set
 
         self.span = span
         self.dimensions = len(span)
@@ -34,14 +34,14 @@ class Graph:
         except NameError:
             return False
 
-    def add_node(self, v, cost):
+    def add_node(self, v):
         """
         Adds node 'v' to the graph.
         """
         if v not in self._succ:
             self._succ[v] = self.adjlist_inner_dict_factory()
             self._pred[v] = self.adjlist_inner_dict_factory()
-            self._node[v] = cost
+            self._node.add(v)
 
     def remove_node(self, v):
         """
@@ -49,7 +49,7 @@ class Graph:
         """
         try:
             nbrs = self._succ[v]
-            del self._node[v]
+            self.nodes.remove(v)
         except NameError:
             raise NameError("The node {v} is not in the graph.".format(v = v))
         for u in nbrs:
@@ -63,12 +63,13 @@ class Graph:
         """
         Returns the total number of nodes in the graph.
         """
-        return len(self._node.keys())
+        return len(self._node)
 
     def add_edge(self, u, v):
         """
         Adds edge 'u -- v' to the graph.
         """
+
         if u not in self._node:
             self._succ[u] = self.adjlist_inner_dict_factory()
             self._pred[u] = self.adjlist_inner_dict_factory()
@@ -76,7 +77,7 @@ class Graph:
             self._succ[v] = self.adjlist_inner_dict_factory()
             self._pred[v] = self.adjlist_inner_dict_factory()
         if (u, v) not in self._edge:
-            self._edge.append((u, v))
+            self._edge.add((u, v))
         datadict = self._adj[v].get(v, self.edge_attr_dict_factory())
         self._succ[u][v] = datadict
         self._pred[v][u] = datadict
@@ -166,3 +167,27 @@ class Graph:
         """
         edge = LineString([u, v])
         return not any(edge.intersects(obstacle) for obstacle in self.obstacles)  # checks if line intersects any obstacles
+
+    def add_obstacles(self, O):
+        """
+        Adds an obstacle from the graph.
+        """
+        self.obstacles.append(O)
+
+    def remove_obstalces(self, O):
+        """
+        Removes an obstalce from the graph.
+        """
+        self.obstacles.remove(O)
+
+    def update_obstacles(self, O):
+        """
+        Updates obstacles in the graph.
+        """
+        for o in O:
+            if o in self.obstacles or O:
+                for obstacle in self.obstacles:
+                    self.remove_obstalces(obstacle)
+        if O not in self.obstacles and O:
+            for obstacle in O:
+                self.add_obstacles(obstacle)
