@@ -71,18 +71,19 @@ class PathPlanning:
         init_state = (0.0, 0.0, -50.0)
         goal_state = (2300.0, 2600.0, -50.0)
         delta = 100
-        k = 2.5
-        n = 2
+        k = 2
 
         graph = Graph(dims)
         path = None
-        case = 0
 
         start_index = 0
 
+        print('Calculating Trajectory...')
         while not rospy.is_shutdown():
-            rrt = RRT(graph, init_state, goal_state, delta, k, case, path, n)
+            rrt = RRT(graph, init_state, goal_state, delta, k, path)
             path = rrt.search()
+
+            init_state = path[-1]
 
             rate.sleep()
             graph.clear()
