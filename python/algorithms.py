@@ -1,5 +1,5 @@
 import numpy as np
-from .utils import dist, angle
+from utils import dist, angle
 
 class BaseRRT:
     """
