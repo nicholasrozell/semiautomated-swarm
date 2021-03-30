@@ -10,7 +10,7 @@ from sensor_msgs.msg import NavSatFix
 from FrameConversions import Frame
 from graph import Graph
 from algorithms import RRTStar as RRT
-from views import draw
+from utils import dist
 
 from shapely.geometry.point import Point
 from shapely.geometry import Polygon
@@ -93,15 +93,12 @@ class PathPlanning:
 
         print('Calculating Trajectory...')
         while not rospy.is_shutdown():
-            # print(self.heading)
-            # error
+            # print('POSITION :  {}'.format(self.pos))
             rrt = RRT(graph, init, goal, delta, k, path, obstacles)
             path = rrt.search()
 
-            init = path[path.index(rrt.brute_force(self.pos, path))+1]
-            del path[:path.index(init)+1]
-            print(path)
-            print(len(path))
+            init = path[-1]
+            del path[-1]
             rate.sleep()
             graph.clear()
             
@@ -128,7 +125,7 @@ class PathPlanning:
             start_index += len(path)
             rate.sleep()
 
-            if goal in path:
+            if dist(self.pos, goal) <= delta:
                 print('Goal Reached')
                 break
 
