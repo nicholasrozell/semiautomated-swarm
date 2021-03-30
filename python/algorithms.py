@@ -1,7 +1,6 @@
 import numpy as np
-from .utils import dist, angle, bspline
+from utils import dist, angle
 from shapely.geometry.point import Point
-from pathplanning.views3 import draw
 
 
 #! RRTStarV2 is the newest search algorithm, use that
@@ -18,7 +17,7 @@ class BaseRRT:
     obstacles: areas of high cost, shapley.polygon
     ppath: previous path, list of tuples
     """
-    def __init__(self, graph, x_init, x_goal, delta, k, obstacles, ppath):
+    def __init__(self, graph, x_init, x_goal, delta, k, obstacles, path):
         self.graph = graph
         self.x_init = x_init
         self.x_goal = x_goal
@@ -27,9 +26,9 @@ class BaseRRT:
 
         self.alpha = np.radians(120)  # angle for a 120 cone for local random sample
         self.obstacles = obstacles
-        self.ppath = ppath
+        self.path = path
 
-    def sample_free(self):
+    def global_sample_free(self):
         """
         Returns a random node from within the graph.
         """
@@ -40,7 +39,7 @@ class BaseRRT:
         if self.ppath == []:
             theta = np.random.uniform() * self.alpha + (np.radians(0) - self.alpha/2)  # initial tree sample free, bounds to angle
         else:
-            theta = np.random.uniform() * self.alpha + (angle(self.ppath[2], self.ppath[3]) - self.alpha/2)  # trees after sample free, bounds to angle
+            theta = np.random.uniform() * self.alpha + (angle(self.path[2], self.path[3]) - self.alpha/2)  # trees after sample free, bounds to angle
         return tuple((self.x_init[0] + r * np.cos(theta), self.x_init[1] + r * np.sin(theta), self.graph.span[2][0]))  # random tuple
     
     def nearest(self, v, r):
@@ -95,7 +94,7 @@ class BaseRRT:
         try:
             return nearest
         except:
-            raise ('bunch list is empty')
+            raise ('Bunch list is empty.')
 
     def steer(self, x_nearest, x_rand):
         """
@@ -208,11 +207,10 @@ class BaseRRT:
         # temp_list = []
         for leaf in leaves:
             theta = angle(self.parent(leaf), leaf)  # finds angle between leaf node and parent
-            temp = tuple((leaf[0] + (self.delta*5) * np.cos(theta), leaf[1] + (self.delta*5) * np.sin(theta), self.graph.span[2][0]))  # creates trajectory line delta away form leaf along angle theta
+            temp = tuple((leaf[0] + (self.range) * np.cos(theta), leaf[1] + (self.range) * np.sin(theta), self.graph.span[2][0]))  # creates trajectory line delta away form leaf along angle theta
             # temp = self.saturate(leaf, self.x_goal, self.delta*5)
             if self.graph.collision_free(leaf, temp) and self.depth(leaf) >= 4: # checks if the trajectory line is interescting an obstacle and is a defined depth
                 nodes.append(leaf)
-                # temp_list.append(temp)
         if nodes != []:
             return self.brute_force(self.x_goal, nodes)  # finds closest node the goal
 
@@ -243,7 +241,6 @@ class BaseRRT:
             current = self.parent(current)
         path.reverse()
         return path
-        # return bspline(path, n=10)
 
     def smooth_path(self, path):
         """
@@ -278,30 +275,6 @@ class BaseRRT:
         return cost
 
 
-class RRT(BaseRRT):
-    """
-    Class for the basic RRT algorithm.
-
-    ref1: Randomized Kinodynamic Planning;
-    Lavelle, Kuffner
-    ref2: Sampling-based Algorithms for Optimal Motion Planning; 
-    Karaman, Frazzoli    
-    """
-    def __init__(self, graph, x_init, x_goal, delta, k, ppath):
-        super().__init__(graph, x_init, x_goal, delta, k, ppath)
-
-    def search(self):
-        self.graph.add_node(self.x_init)
-        while self.graph.num_nodes() <= 500:
-            x_rand = self.sample_free()
-            x_nearest = self.nearest(x_rand, self.shrinking_ball_radius())
-            x_new = self.steer(x_nearest, x_rand)
-            if self.graph.collision_free(x_nearest, x_new):
-                self.graph.add_node(x_new)
-                self.graph.add_edge(x_nearest, x_new)
-        return self.compute_trajectory()
-
-
 class RRTStar(BaseRRT):
     """
     Class for the optimal RRT algorithm.
@@ -309,8 +282,8 @@ class RRTStar(BaseRRT):
     ref: Sampling-based Algorithms for Optimal Motion Planning; 
     Karaman, Frazzoli
     """
-    def __init__(self, graph, x_init, x_goal, delta, k, ppath):
-        super().__init__(graph, x_init, x_goal, delta, k, ppath)
+    def __init__(self, graph, x_init, x_goal, delta, k, path):
+        super().__init__(graph, x_init, x_goal, delta, k, path)
 
     def search(self):
         self.graph.add_node(self.x_init)
@@ -426,15 +399,6 @@ class RRTStarV2(BaseRRT):
                     self.graph.add_edge(nearest, n)  # create edge
                     leaves.append(n)  # add orphan to leaves
                     self.orphans.remove(n)  # remove orphan from orphans list
-        
-        ## Other slower method
-        # for leaf in leaves:
-        #     if self.orphans != []:
-        #         nearest = self.brute_force(leaf, self.orphans)
-        #         if self.graph.collision_free(leaf, nearest):
-        #             self.graph.add_edge(leaf, nearest)
-        #             leaves.append(nearest)
-        #             self.orphans.remove(nearest)
 
     def search(self):
         """
@@ -452,12 +416,10 @@ class RRTStarV2(BaseRRT):
             x_new = self.steer(x_nearest, x_rand)  # saturates node
             # if self.graph.obstacle_free(x_new):
             X_near = self.extend(x_new, x_nearest, r)  # extends tree to new nodes
-            if self.is_orphan(x_new):  # checks if the noew node is an orphan
+            if self.is_orphan(x_new):  # checks if the new node is an orphan
                 self.orphans.append(x_new)
             if x_new in self.graph._node:  # checks if new node is in the graph
                 self.rewire_neighbors(x_new, X_near)  # rewires nodes that have minimal costs
                 self.reduce_inconsistency()  # craetes edges for potential orphans
             count += 1
-            if count == 125:
-                self.obstacles = [Point(10, 0).buffer(5.0)]
         return self.compute_trajectory(), self.obstacles  # calculate a path from generated tree to goal node
