@@ -17,16 +17,18 @@ class BaseRRT:
     obstacles: areas of high cost, shapley.polygon
     ppath: previous path, list of tuples
     """
-    def __init__(self, graph, x_init, x_goal, delta, k, obstacles, path):
+    def __init__(self, graph, x_init, x_goal, delta, k, path, obstacles):
         self.graph = graph
         self.x_init = x_init
         self.x_goal = x_goal
         self.delta = delta
         self.k = k
+        self.path = path
+        self.obstacles = obstacles
 
         self.alpha = np.radians(120)  # angle for a 120 cone for local random sample
-        self.obstacles = obstacles
-        self.path = path
+        self.range = self.delta*4
+        # self.heading = heading
 
     def global_sample_free(self):
         """
@@ -35,8 +37,8 @@ class BaseRRT:
         return tuple(np.random.uniform(self.graph.span[:, 0], self.graph.span[:, 1], self.graph.span[:, 2]))
 
     def local_sample_free(self):
-        r = self.delta*4 * np.sqrt(np.random.uniform())  # radius for which a node can appear
-        if self.ppath == []:
+        r = self.range * np.sqrt(np.random.uniform())  # radius for which a node can appear
+        if self.path is None:
             theta = np.random.uniform() * self.alpha + (np.radians(0) - self.alpha/2)  # initial tree sample free, bounds to angle
         else:
             theta = np.random.uniform() * self.alpha + (angle(self.path[2], self.path[3]) - self.alpha/2)  # trees after sample free, bounds to angle
@@ -282,8 +284,8 @@ class RRTStar(BaseRRT):
     ref: Sampling-based Algorithms for Optimal Motion Planning; 
     Karaman, Frazzoli
     """
-    def __init__(self, graph, x_init, x_goal, delta, k, path):
-        super().__init__(graph, x_init, x_goal, delta, k, path)
+    def __init__(self, graph, x_init, x_goal, delta, k, path, obstacles):
+        super().__init__(graph, x_init, x_goal, delta, k, path, obstacles)
 
     def search(self):
         self.graph.add_node(self.x_init)
@@ -322,9 +324,9 @@ class RRTStarV2(BaseRRT):
     Planning with Quick Replanning; 
     Otte, Frazzoli
     """
-    def __init__(self, graph, x_init, x_goal, delta, k, obstacles, ppath):
+    def __init__(self, graph, x_init, x_goal, delta, k, path, obstacles):
         self.orphans = []
-        super().__init__(graph, x_init, x_goal, delta, k, obstacles, ppath)
+        super().__init__(graph, x_init, x_goal, delta, k, path, obstacles)
 
     def extend(self, x_new, x_nearest, r):
         """
