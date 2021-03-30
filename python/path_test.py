@@ -87,6 +87,7 @@ class PathPlanning:
 
             rate.sleep()
             graph.clear()
+            
             pathNED = np.asarray(path)
 
             wp_msg = []
