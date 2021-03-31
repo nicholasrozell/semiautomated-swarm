@@ -41,7 +41,7 @@ class BaseRRT:
         if self.path is None:
             theta = np.random.uniform() * self.alpha + (np.radians(0) - self.alpha/2)  # initial tree sample free, bounds to angle
         else:
-            theta = np.random.uniform() * self.alpha + (angle(self.path[2], self.path[3]) - self.alpha/2)  # trees after sample free, bounds to angle
+            theta = np.random.uniform() * self.alpha + (angle(self.path[-2], self.path[-1]) - self.alpha/2)  # trees after sample free, bounds to angle
         return tuple((self.x_init[0] + r * np.cos(theta), self.x_init[1] + r * np.sin(theta), self.graph.span[2][0]))  # random tuple
     
     def nearest(self, v, r):
@@ -216,6 +216,13 @@ class BaseRRT:
         if nodes != []:
             return self.brute_force(self.x_goal, nodes)  # finds closest node the goal
 
+    def connect_to_goal(self, v):
+        if self.x_goal in self.graph._node:
+            return
+        if dist(self.x_goal, v) < self.delta:
+            self.graph.add_node(self.x_goal)
+            self.graph.add_edge(v, self.x_goal)
+
     def compute_trajectory(self):
         """
         Overall function for creating paths.
@@ -310,6 +317,7 @@ class RRTStar(BaseRRT):
                         x_parent = self.parent(x_near)
                         self.graph.remove_edge(x_parent, x_near)
                         self.graph.add_edge(x_new, x_near)
+            self.connect_to_goal(x_new)
             count += 1
         return self.compute_trajectory()
 
@@ -408,11 +416,14 @@ class RRTStarV2(BaseRRT):
         """
         self.graph.add_node(self.x_init)  # adds root node to graph
         count = 0
+        if count == 250:
+            return path, self.obstacles
         while count <= 250:
             r = self.shrinking_ball_radius()  # finds radius r
-            if self.obstacles != self.graph.obstacles:
-                self.graph.update_obstacles(self.obstacles)  # Updates obstacles if a difference is seen
-                self.propogate_descendents()  # removes edges from nodes that are insdie obstacles
+            if self.obstacles is not None:
+                if self.obstacles != self.graph.obstacles:
+                    self.graph.update_obstacles(self.obstacles)  # Updates obstacles if a difference is seen
+                    self.propogate_descendents()  # removes edges from nodes that are insdie obstacles
             x_rand = self.local_sample_free()  # selects a random local node
             x_nearest = self.nearest(x_rand, r)  # finds nearest neighbor to node
             x_new = self.steer(x_nearest, x_rand)  # saturates node
