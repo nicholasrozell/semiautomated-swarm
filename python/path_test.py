@@ -9,7 +9,7 @@ from sensor_msgs.msg import NavSatFix
 
 from FrameConversions import Frame
 from graph import Graph
-from algorithms import RRTStarV2 as RRT
+from algorithms import RRTStar as RRT
 from utils import dist
 
 from shapely.geometry.point import Point
@@ -87,40 +87,50 @@ class PathPlanning:
                      (Point(1500, 500).buffer(200)),
                      (Point(1800, 1000).buffer(200)),
                      (Point(2000, 1400).buffer(200)),
-                     (Point(1200, 1800).buffer(200))]        
+                     (Point(1200, 1800).buffer(200))]  
+        # obstacles = [Point(2000, 1400).buffer(1200)]      
         init = self.pos
         goal = (2300.0, 2600.0, -50.0)
         delta = 100
         k = 2
+        n = 250
 
         graph = Graph(dims, obstacles)
         path = None
         obstacles = None
+        previous_path = None
+        trail = []
 
         start_index = 0
 
-        print('Calculating Trajectory...')
+        print('Calculating Trajectory...\n')
         while not rospy.is_shutdown():
-            rrt = RRT(graph, init, goal, delta, k, path, obstacles)
+            rrt = RRT(graph, init, goal, delta, k, path, obstacles, n)
             path, obstacles = rrt.search()
 
-            if rrt.brute_force(self.pos, path) == path[-2]:
-                init = path[-1]
-                graph.clear()
-            
-            del path[-1]
+            # if rrt.brute_force(self.pos, path) == path[-2]:
+                # init = path[-1]
+                # del path[-1]
+
+            init = path[path.index(rrt.brute_force(self.pos, path))+1]
+            # print(path, '\n')
+            trail.append(path)
+            # print(init, '\n')
+            # print(path.index(rrt.brute_force(self.pos, path))+1, '\n')
+            # del path[path.index(init):]
+            # print(path, '\n')
+            # print(len(path))
+            # break
 
             rate.sleep()
+            graph.clear()
 
             pathNED = np.asarray(path)
 
             wp_msg = []
-            # start_index = count
-            # print(pathNED.shape)
 
             pathLLA = self.frame.ConvNED2LLA(pathNED.T)
             for i in range(len(pathNED)):
-
                 wp_point = Waypoint()
                 wp_point.frame = 3
 
@@ -132,11 +142,16 @@ class PathPlanning:
             # print(wp_msg)
             resp = wp_push(start_index, wp_msg)
             # print(resp,'\n')
-            start_index += len(path)
+
+            # if previous_path != path:
+            start_index += path.index(rrt.brute_force(self.pos, path))+1
+                # previous_path = path
+
             rate.sleep()
 
-            if goal in path or dist(self.pos, goal) < delta:
+            if goal in path or dist(self.pos, goal) <= delta:
                 print('Goal Reached')
+                print(trail)
                 break
 
 if __name__ == '__main__':
