@@ -9,7 +9,7 @@ from sensor_msgs.msg import NavSatFix
 
 from FrameConversions import Frame
 from graph import Graph
-from algorithms import RRTStar as RRT
+from algorithms import RRTStarV2 as RRT
 from utils import dist
 
 from shapely.geometry.point import Point
@@ -80,12 +80,20 @@ class PathPlanning:
 
 
         dims = np.array([(-500, 2500), (-100, 2900), (-50, -50)])
+        obstacles = [(Point(1250, 1000).buffer(200)), 
+                     (Point(1500, 1500).buffer(200)),
+                     (Point(750, 1250).buffer(200)),
+                     (Point(800, 650).buffer(200)),
+                     (Point(1500, 500).buffer(200)),
+                     (Point(1800, 1000).buffer(200)),
+                     (Point(2000, 1400).buffer(200)),
+                     (Point(1200, 1800).buffer(200))]        
         init = self.pos
         goal = (2300.0, 2600.0, -50.0)
         delta = 100
         k = 2
 
-        graph = Graph(dims)
+        graph = Graph(dims, obstacles)
         path = None
         obstacles = None
 
@@ -93,15 +101,17 @@ class PathPlanning:
 
         print('Calculating Trajectory...')
         while not rospy.is_shutdown():
-            # print('POSITION :  {}'.format(self.pos))
             rrt = RRT(graph, init, goal, delta, k, path, obstacles)
-            path = rrt.search()
+            path, obstacles = rrt.search()
 
-            init = path[-1]
-            del path[-1]
-            rate.sleep()
-            graph.clear()
+            if rrt.brute_force(self.pos, path) == path[-2]:
+                init = path[-1]
+                graph.clear()
             
+            del path[-1]
+
+            rate.sleep()
+
             pathNED = np.asarray(path)
 
             wp_msg = []
@@ -125,7 +135,7 @@ class PathPlanning:
             start_index += len(path)
             rate.sleep()
 
-            if dist(self.pos, goal) <= delta:
+            if goal in path or dist(self.pos, goal) < delta:
                 print('Goal Reached')
                 break
 
