@@ -291,7 +291,8 @@ class RRTStar(BaseRRT):
     ref: Sampling-based Algorithms for Optimal Motion Planning; 
     Karaman, Frazzoli
     """
-    def __init__(self, graph, x_init, x_goal, delta, k, path, obstacles):
+    def __init__(self, graph, x_init, x_goal, delta, k, path, obstacles, max_nodes):
+        self.max_nodes= max_nodes
         super().__init__(graph, x_init, x_goal, delta, k, path, obstacles)
 
     def search(self):
@@ -319,7 +320,7 @@ class RRTStar(BaseRRT):
                         self.graph.add_edge(x_new, x_near)
             self.connect_to_goal(x_new)
             count += 1
-        return self.compute_trajectory()
+        return self.compute_trajectory(), self.obstacles
 
 
 class RRTStarV2(BaseRRT):
@@ -332,8 +333,9 @@ class RRTStarV2(BaseRRT):
     Planning with Quick Replanning; 
     Otte, Frazzoli
     """
-    def __init__(self, graph, x_init, x_goal, delta, k, path, obstacles):
+    def __init__(self, graph, x_init, x_goal, delta, k, path, obstacles,n):
         self.orphans = []
+        self.max_nodes = max_nodes
         super().__init__(graph, x_init, x_goal, delta, k, path, obstacles)
 
     def extend(self, x_new, x_nearest, r):
@@ -415,10 +417,7 @@ class RRTStarV2(BaseRRT):
         Main function of algorithm.
         """
         self.graph.add_node(self.x_init)  # adds root node to graph
-        count = 0
-        if count == 250:
-            return path, self.obstacles
-        while count <= 250:
+        while self.graph.num_nodes() <= self.max_nodes:
             r = self.shrinking_ball_radius()  # finds radius r
             if self.obstacles is not None:
                 if self.obstacles != self.graph.obstacles:
@@ -434,5 +433,4 @@ class RRTStarV2(BaseRRT):
             if x_new in self.graph._node:  # checks if new node is in the graph
                 self.rewire_neighbors(x_new, X_near)  # rewires nodes that have minimal costs
                 self.reduce_inconsistency()  # craetes edges for potential orphans
-            count += 1
         return self.compute_trajectory(), self.obstacles  # calculate a path from generated tree to goal node
