@@ -80,21 +80,21 @@ class PathPlanning:
 
 
         dims = np.array([(-500, 2500), (-100, 2900), (-50, -50)])
-        obstacles = [(Point(1250, 1000).buffer(200)), 
-                     (Point(1500, 1500).buffer(200)),
-                     (Point(750, 1250).buffer(200)),
-                     (Point(800, 650).buffer(200)),
-                     (Point(1500, 500).buffer(200)),
-                     (Point(1800, 1000).buffer(200)),
-                     (Point(2000, 1400).buffer(200)),
-                     (Point(1200, 1800).buffer(200))]  
+        # obstacles = [(Point(1250, 1000).buffer(200)), 
+        #              (Point(1500, 1500).buffer(200)),
+        #              (Point(750, 1250).buffer(200)),
+        #              (Point(800, 650).buffer(200)),
+        #              (Point(1500, 500).buffer(200)),
+        #              (Point(1800, 1000).buffer(200)),
+        #              (Point(2000, 1400).buffer(200)),
+        #              (Point(1200, 1800).buffer(200))]  
         # obstacles = [Point(2000, 1400).buffer(1200)]      
         init = self.pos
         goal = (2300.0, 2600.0, -50.0)
         delta = 100
         k = 2
 
-        graph = Graph(dims, obstacles)
+        graph = Graph(dims)
         path = None
         obstacles = None
         previous_path = None
@@ -104,10 +104,11 @@ class PathPlanning:
 
         print('Calculating Trajectory...\n')
         while not rospy.is_shutdown():
-            if self.graph.num_nodes() <= 250:
-                rrt = RRT(graph, init, goal, delta, k, path)
+            if graph.num_nodes() == 0:
+                rrt = RRTStar(graph, init, goal, delta, k, path)
+            if graph.num_nodes() <= 250:
                 path = rrt.search()
-
+ 
             else:
                 init = path[path.index(rrt.brute_force(self.pos, path))+1]
                 trail.append(path)
@@ -139,10 +140,11 @@ class PathPlanning:
 
                 rate.sleep()
 
-            if dist(self.pos, goal) <= delta*3:
-                print('Goal Reached')
-                print(trail)
-                break
+            if path is not None:
+                if goal in path or dist(self.pos, goal) <= delta*3:
+                    print('Goal Reached')
+                    print(trail)
+                    break
         
             # self.graph.update_obstacles()
 
