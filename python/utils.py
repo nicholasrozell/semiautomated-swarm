@@ -1,4 +1,3 @@
-import math
 import numpy as np
 import scipy.interpolate as si
 
@@ -7,7 +6,7 @@ def dist(p, q):
     """
     Finds the Euclidean distance between two points.
     """
-    return math.sqrt(sum([(a - b)**2 for a, b in zip(p, q)]))  # Gets stuck here for some reason
+    return np.sqrt(sum([(a - b)**2 for a, b in zip(p, q)]))  # Gets stuck here for some reason
 
 def angle(a, b):
     """
