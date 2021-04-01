@@ -16,7 +16,7 @@ class BaseRRT:
     obstacles: areas of high cost, shapley.polygon
     ppath: previous path, list of tuples
     """
-    def __init__(self, graph, x_init, x_goal, delta, k, path, obstacles):
+    def __init__(self, graph, x_init, x_goal, delta, k, path):
         self.graph = graph
         self.x_init = x_init
         self.x_goal = x_goal
