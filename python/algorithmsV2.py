@@ -23,7 +23,6 @@ class BaseRRT:
         self.delta = delta
         self.k = k
         self.path = path
-        self.obstacles = obstacles
 
         self.alpha = np.radians(120)  # angle for a 120 cone for local random sample
         self.range = self.delta*4
@@ -231,6 +230,8 @@ class BaseRRT:
             if self.is_leaf(n) and not self.is_orphan(n):
                 leaves.append(n)
         leaf = self.best_leaf(leaves)  # finds the closest leaf node to the goal
+        if leaf is None:
+            return None
         return self.construct_path(self.x_init, leaf)  # creates a path from the root to the leaf
 
     def construct_path(self, start, end):
@@ -374,7 +375,7 @@ class RRTStar(BaseRRT):
         """
         Main function of algorithm.
         """
-        if self.graph.num_nodes == 0:
+        if self.graph.num_nodes() == 0:
             self.graph.add_node(self.x_init)  # adds root node to graph
         r = self.shrinking_ball_radius()  # finds radius r
         x_rand = self.local_sample_free()  # selects a random local node
@@ -386,4 +387,6 @@ class RRTStar(BaseRRT):
         if x_new in self.graph._node:  # checks if new node is in the graph
             self.rewire_neighbors(x_new, X_near)  # rewires nodes that have minimal costs
             self.reduce_inconsistency()  # craetes edges for potential orphans
+        self.connect_to_goal(x_new)
         return self.compute_trajectory()  # calculate a path from generated tree to goal node
+        
