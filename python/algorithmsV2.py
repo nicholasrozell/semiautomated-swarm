@@ -39,7 +39,7 @@ class BaseRRT:
         if self.path is None:
             theta = np.random.uniform() * self.alpha + (np.radians(0) - self.alpha/2)  # initial tree sample free, bounds to angle
         else:
-            theta = np.random.uniform() * self.alpha + (angle(self.path[-2], self.path[-1]) - self.alpha/2)  # trees after sample free, bounds to angle
+            theta = np.random.uniform() * self.alpha + (angle(self.path[0], self.path[1]) - self.alpha/2)  # trees after sample free, bounds to angle
         return tuple((self.x_init[0] + r * np.cos(theta), self.x_init[1] + r * np.sin(theta), self.graph.span[2][0]))  # random tuple
     
     def nearest(self, v, r):
@@ -208,8 +208,8 @@ class BaseRRT:
         for leaf in leaves:
             theta = angle(self.parent(leaf), leaf)  # finds angle between leaf node and parent
             temp = tuple((leaf[0] + (self.range) * np.cos(theta), leaf[1] + (self.range) * np.sin(theta), self.graph.span[2][0]))  # creates trajectory line delta away form leaf along angle theta
-            # temp = self.saturate(leaf, self.x_goal, self.delta*5)
-            if self.graph.collision_free(leaf, temp) and self.depth(leaf) >= 4: # checks if the trajectory line is interescting an obstacle and is a defined depth
+            temp = self.saturate(leaf, self.x_goal, self.delta)
+            if self.graph.collision_free(leaf, temp): # checks if the trajectory line is interescting an obstacle and is a defined depth
                 nodes.append(leaf)
         if nodes != []:
             return self.brute_force(self.x_goal, nodes)  # finds closest node the goal
@@ -250,23 +250,6 @@ class BaseRRT:
             current = self.parent(current)
         path.reverse()
         return path
-
-    def smooth_path(self, path):
-        """
-        Does a polynomial fit on the path taken from the tree. 
-        
-        Not used...
-        """
-        array = np.array(path)
-        x = array[:, 0]
-        y = array[:, 1]
-        f = np.polyfit(x, y, 3)
-        p = np.poly1d(f)
-        xp = np.linspace(x[0], x[-1], len(path))
-        smoothed_path = []
-        for i in range(len(xp)):
-            smoothed_path.append((xp[i], p(xp[i]), path[0][2]))
-        return smoothed_path
 
     def cost(self, child):
         """
@@ -360,12 +343,15 @@ class RRTStar(BaseRRT):
         if self.orphans == []:
             return
         leaves = []
+        # print('Orphan nodes :  ', self.orphans)
         for n in self.graph._node:  # Grabs leafs of tree so far
             if self.is_leaf(n) and not self.is_orphan(n):
                 leaves.append(n)
+        if leaves == []:
+            return
         for n in self.orphans:  # iterate through orphans
             if self.graph.obstacle_free(n):  # checks if orphan is not inside an obstalce
-                nearest = self.brute_force(n, leaves)  # finds nearest leaf to orphan
+                nearest = self.brute_force(n, leaves)  # finds nearest leaf to orphan [Bug here: leaves is empty]
                 if self.graph.collision_free(nearest, n):  # checks if the potential edge has a collision
                     self.graph.add_edge(nearest, n)  # create edge
                     leaves.append(n)  # add orphan to leaves
@@ -386,7 +372,6 @@ class RRTStar(BaseRRT):
             self.orphans.append(x_new)
         if x_new in self.graph._node:  # checks if new node is in the graph
             self.rewire_neighbors(x_new, X_near)  # rewires nodes that have minimal costs
-            self.reduce_inconsistency()  # craetes edges for potential orphans
+            self.reduce_inconsistency()  # creates edges for potential orphans
         self.connect_to_goal(x_new)
         return self.compute_trajectory()  # calculate a path from generated tree to goal node
-        
