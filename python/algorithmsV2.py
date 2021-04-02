@@ -288,9 +288,12 @@ class RRTStar(BaseRRT):
         x_nearest: node, tuple
         r: shrinking ball radius, int
         """
+        # print('near')
         X_near = self.near(x_new, self.delta)  # finds nodes within delta away from the new node
         self.graph.add_node(x_new)
+        # print('find parent')
         self.find_parent(x_new, x_nearest, X_near)  # finds parent for new node
+        # print('out')
         return X_near
 
     def find_parent(self, x_new, x_min, X_near):
@@ -304,11 +307,15 @@ class RRTStar(BaseRRT):
         if self.graph.collision_free(x_min, x_new):
             c_min = self.cost(x_min) + dist(x_min, x_new)  # set minimum cost
             for x_near in X_near:
-                if self.graph.collision_free(x_near, x_new) and self.cost(x_near) + dist(x_near, x_new) < c_min:
-                # checks for collision and if the cost of a nearby node is less
-                    x_min = x_near  # set new minimum node
-                    c_min = self.cost(x_near) + dist(x_near, x_new)  # set new minimum cost
-            self.graph.add_edge(x_min, x_new)
+                print('collision free')
+                if self.graph.collision_free(x_near, x_new):
+                    print('cost + dist')
+                    if self.cost(x_near) + dist(x_near, x_new) < c_min:
+                    # checks for collision and if the cost of a nearby node is less
+                        x_min = x_near  # set new minimum node
+                        c_min = self.cost(x_near) + dist(x_near, x_new)  # set new minimum cost
+                self.graph.add_edge(x_min, x_new)
+        print('out')
 
     def rewire_neighbors(self, x_new, X_near):
         """
@@ -363,15 +370,24 @@ class RRTStar(BaseRRT):
         """
         if self.graph.num_nodes() == 0:
             self.graph.add_node(self.x_init)  # adds root node to graph
+        # print('shrinking_ball')
         r = self.shrinking_ball_radius()  # finds radius r
+        # print('local sample free')
         x_rand = self.local_sample_free()  # selects a random local node
+        # print('nearest neighbor')
         x_nearest = self.nearest(x_rand, r)  # finds nearest neighbor to node
+        # print('steer')
         x_new = self.steer(x_nearest, x_rand)  # saturates node
+        # print('extend')
         X_near = self.extend(x_new, x_nearest, r)  # extends tree to new nodes
         if self.is_orphan(x_new):  # checks if the new node is an orphan
             self.orphans.append(x_new)
         if x_new in self.graph._node:  # checks if new node is in the graph
+            # print('rewire neighbors')
             self.rewire_neighbors(x_new, X_near)  # rewires nodes that have minimal costs
+            # print('reduce inconsistency')
             self.reduce_inconsistency()  # creates edges for potential orphans
+        # print('connect to goal')
         self.connect_to_goal(x_new)
+        # print('compute trajectory')
         return self.compute_trajectory()  # calculate a path from generated tree to goal node
