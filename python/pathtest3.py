@@ -112,7 +112,7 @@ class PathPlanning:
         print('Calculating Trajectory...\n')
         while not rospy.is_shutdown():
             if graph.num_nodes() == 0:
-                rrt = RRTStar(graph, init, goal, delta, k, path)
+                rrt = RRT(graph, init, goal, delta, k, path)
             if graph.num_nodes() <= 250:
                 path = rrt.search()
  
