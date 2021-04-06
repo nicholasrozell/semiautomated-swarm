@@ -203,7 +203,7 @@ class BaseRRT:
         child = end
         if start == end:
             return path
-        while start no in path:
+        while start not in path:
             path.append(self.parent(child))
             child = self.parent(child)
         path.reverse()
