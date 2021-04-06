@@ -220,6 +220,12 @@ class BaseRRT:
             v = self.parent(v)
         return cost
 
+    def g(self, v):
+        """
+        Returns the cost between node 'v' and the goal.
+        """
+        return dist(v, self.x_goal)
+
 class RRT(BaseRRT):
     def __init__(self, graph, x_init, x_goal, delta, k, path):
         self.orphans = []
