@@ -271,10 +271,10 @@ class RRT(BaseRRT):
         for n in self.orphans:
             if self.graph.obstacle_free(n):
                 nearest = self.brute_force(n, leaves)
-                if self.graph.collision_free(nearest, n)
-                self.graph.add_edge(nearest, n)
-                leaves.append(n)
-                self.orpahns.remove(n)
+                if self.graph.collision_free(nearest, n):
+                    self.graph.add_edge(nearest, n)
+                    leaves.append(n)
+                    self.orpahns.remove(n)
 
     def search(self):
         if self.graph.num_nodes() == 0:
