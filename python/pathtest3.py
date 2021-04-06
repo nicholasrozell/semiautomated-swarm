@@ -9,7 +9,7 @@ from sensor_msgs.msg import NavSatFix
 
 from FrameConversions import Frame
 from graphV2 import Graph
-from algorithmsV3 import RRT
+from algorithmsV3 import MiniRRT as RRT
 from utils import dist
 
 from shapely.geometry.point import Point
@@ -110,7 +110,9 @@ class PathPlanning:
             rate.sleep()
         
         print('Calculating Trajectory...\n')
+        count = 0
         while not rospy.is_shutdown():
+            print(count)
             if graph.num_nodes() == 0:
                 rrt = RRT(graph, init, goal, delta, k, path)
             if graph.num_nodes() <= 250:
@@ -153,6 +155,7 @@ class PathPlanning:
                     print('Goal Reached')
                     print(trail)
                     break
+            count += 1
         
             # self.graph.update_obstacles()
 
