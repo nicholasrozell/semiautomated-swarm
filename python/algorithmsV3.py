@@ -226,7 +226,7 @@ class RRT(BaseRRT):
 
     def extend(self, x_new, x_nearest, r):
         X_near = self.near(x_new, self.delta)
-        self.graph.add_node(x_new, self.dist(x_nearest, x_new))
+        self.graph.add_node(x_new, dist(x_nearest, x_new))
         self.find_parent(x_new, x_nearest, X_near)
         return X_near
 
