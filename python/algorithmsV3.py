@@ -280,7 +280,7 @@ class RRT(BaseRRT):
         if self.graph.num_nodes() == 0:
             self.graph.add_node(self.x_init, 0)
         r = self.shrinking_ball_radius()
-        x_rand = self.local_sample_free()
+        x_rand = self.sample_free()
         x_nearest = self.nearest(x_rand, r)
         x_new = self.steer(x_nearest, x_rand)
         X_near = self.extend(x_near, x_nearest, r)
