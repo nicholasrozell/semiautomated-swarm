@@ -283,7 +283,7 @@ class RRT(BaseRRT):
         x_rand = self.sample_free()
         x_nearest = self.nearest(x_rand, r)
         x_new = self.steer(x_nearest, x_rand)
-        X_near = self.extend(x_near, x_nearest, r)
+        X_near = self.extend(x_new, x_nearest, r)
         if self.is_orphan(x_new):
             self.orphans.append(x_new)
         if x_new in self.graph._node:
