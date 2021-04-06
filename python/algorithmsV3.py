@@ -164,6 +164,7 @@ class BaseRRT:
         #     return self.brute_force(self.x_goal, nodes)
 
         # New Method
+        goal = None
         best = float('inf')
         for leaf in leaves:
             self.graph._node[leaf] = self.g(leaf) - self.cost(leaf)
