@@ -22,21 +22,25 @@ class PathPlanning:
         self.position = np.zeros(shape=(3,1))
         self.frame = Frame()
         self.heading = None
+        self.home_set = False
 
         print('\nINITIALIZING')
 
     def home_pos_cb(self, data):
-        print("CALLBACK\n")
         # Update only if new home is set in controller
-        if (data.geo.latitude != self.home_pos_data[0] or
-                data.geo.longitude != self.home_pos_data[1] or
-                data.geo.altitude != self.home_pos_data[2]):
+        # Changed rounding factor to 2 thru numpy - Nick
+        # Needs to be increased - Nick
+        if (np.round(data.geo.latitude, 2) != np.round(self.home_pos_data[0], 2) or
+                np.round(data.geo.longitude, 2) != np.round(self.home_pos_data[1], 2) or
+                np.round(data.geo.altitude, 2) != np.round(self.home_pos_data[2], 2)):
+            print("CALLBACK\n")
             self.home_pos_data[0] = data.geo.latitude
             self.home_pos_data[1] = data.geo.longitude
             self.home_pos_data[2] = data.geo.altitude
 
             self.frame.addRefLLA(self.home_pos_data)
             print('Reference set\n')
+            self.home_set = True
 
     def global_heading(self, data):
         self.heading = data
@@ -80,21 +84,21 @@ class PathPlanning:
 
 
         dims = np.array([(-500, 2500), (-100, 2900), (-50, -50)])
-        # obstacles = [(Point(1250, 1000).buffer(200)), 
-        #              (Point(1500, 1500).buffer(200)),
-        #              (Point(750, 1250).buffer(200)),
-        #              (Point(800, 650).buffer(200)),
-        #              (Point(1500, 500).buffer(200)),
-        #              (Point(1800, 1000).buffer(200)),
-        #              (Point(2000, 1400).buffer(200)),
-        #              (Point(1200, 1800).buffer(200))]  
+        obstacles = [(Point(1250, 1000).buffer(200)), 
+                     (Point(1500, 1500).buffer(200)),
+                     (Point(750, 1250).buffer(200)),
+                     (Point(800, 650).buffer(200)),
+                     (Point(1500, 500).buffer(200)),
+                     (Point(1800, 1000).buffer(200)),
+                     (Point(2000, 1400).buffer(200)),
+                     (Point(1200, 1800).buffer(200))]  
         # obstacles = [Point(2000, 1400).buffer(1200)]      
         init = self.pos
         goal = (2300.0, 2600.0, -50.0)
         delta = 100
         k = 2
 
-        graph = Graph(dims)
+        graph = Graph(dims, obstacles)
         path = None
         obstacles = None
         previous_path = None
@@ -102,6 +106,9 @@ class PathPlanning:
 
         start_index = 0
 
+        while not self.home_set:
+            rate.sleep()
+        
         print('Calculating Trajectory...\n')
         while not rospy.is_shutdown():
             if graph.num_nodes() == 0:
@@ -112,6 +119,7 @@ class PathPlanning:
             else:
                 init = path[path.index(rrt.brute_force(self.pos, path))+1]
                 trail.append(path)
+                # print(trail, '\n')
 
                 rate.sleep()
                 graph.clear()
@@ -132,7 +140,7 @@ class PathPlanning:
 
                 # print(wp_msg)
                 resp = wp_push(start_index, wp_msg)
-                # print(resp,'\n')
+                print(resp,'\n')
 
                 # if previous_path != path:
                 start_index += path.index(rrt.brute_force(self.pos, path))+1
