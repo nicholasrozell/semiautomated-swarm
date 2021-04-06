@@ -278,7 +278,7 @@ class RRT(BaseRRT):
 
     def search(self):
         if self.graph.num_nodes() == 0:
-            self.graph.add_nodes(self.x_init, 0)
+            self.graph.add_node(self.x_init, 0)
         r = self.shrinking_ball_radius()
         x_rand = self.local_sample_free()
         x_nearest = self.nearest(x_rand, r)
