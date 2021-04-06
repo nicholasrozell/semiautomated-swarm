@@ -164,7 +164,6 @@ class BaseRRT:
         #     return self.brute_force(self.x_goal, nodes)
 
         # New Method
-        goal = None
         best = float('inf')
         for leaf in leaves:
             self.graph._node[leaf] = self.g(leaf) - self.cost(leaf)
@@ -180,7 +179,7 @@ class BaseRRT:
         if self.x_goal in self.graph._node:
             return
         if dist(self.x_goal, v) < self.delta:
-            self.graph.add_node(self.x_goal)
+            self.graph.add_node(self.x_goal, dist(v, self.x_goal))
             self.graph.add_edge(v, self.x_goal)
 
     def compute_trajectory(self):
