@@ -264,7 +264,7 @@ class RRT(BaseRRT):
             return
         leaves = []
         for n in self.graph._node:
-            if self.is_leaf(n) and not in self.orphans:
+            if self.is_leaf(n) and not self.is_orphans(n):
                 leaves.append(n)
         if leaves == []:
             return
