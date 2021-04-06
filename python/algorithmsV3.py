@@ -166,7 +166,7 @@ class BaseRRT:
         # New Method
         best = float('inf')
         for leaf in leaves:
-            self.graph._node[leaf] = self.g(leaf) = self.cost(leaf)
+            self.graph._node[leaf] = self.g(leaf) - self.cost(leaf)
             if self.graph._node[leaf] < best:
                 best = self.graph._node[leaf]
                 goal = leaf
