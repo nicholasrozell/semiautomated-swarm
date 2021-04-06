@@ -246,6 +246,7 @@ class BaseRRT:
         if start == end:
             return path
         while start not in path:
+            # print('current node :  {} \n'.format(current))
             path.append(self.parent(current))
             current = self.parent(current)
         path.reverse()
@@ -258,8 +259,10 @@ class BaseRRT:
         child: node, tuple
         """
         cost = 0
-        while child != self.x_init:
+        while child != self.x_init:  # child is its own parent never reaches root node to exit            
             parent = self.parent(child)
+            print('child :  ',child)
+            print('parent :  ',parent, '\n')
             if parent == None:
                 return float('inf')
             cost += dist(parent, child)
@@ -293,7 +296,7 @@ class RRTStar(BaseRRT):
         self.graph.add_node(x_new)
         # print('find parent')
         self.find_parent(x_new, x_nearest, X_near)  # finds parent for new node
-        # print('out')
+        # print('out - extend')
         return X_near
 
     def find_parent(self, x_new, x_min, X_near):
@@ -306,16 +309,15 @@ class RRTStar(BaseRRT):
         """
         if self.graph.collision_free(x_min, x_new):
             c_min = self.cost(x_min) + dist(x_min, x_new)  # set minimum cost
+            # print('for')
             for x_near in X_near:
-                print('collision free')
-                if self.graph.collision_free(x_near, x_new):
-                    print('cost + dist')
-                    if self.cost(x_near) + dist(x_near, x_new) < c_min:
+                # print('collision free')
+                if self.graph.collision_free(x_near, x_new) and self.cost(x_near) + dist(x_near, x_new) < c_min:  ## <-- bug on this line
                     # checks for collision and if the cost of a nearby node is less
                         x_min = x_near  # set new minimum node
                         c_min = self.cost(x_near) + dist(x_near, x_new)  # set new minimum cost
                 self.graph.add_edge(x_min, x_new)
-        print('out')
+        # print('out - find parent')
 
     def rewire_neighbors(self, x_new, X_near):
         """
@@ -332,6 +334,7 @@ class RRTStar(BaseRRT):
                     continue
                 self.graph.remove_edge(x_parent, x_near)  # removes edge with parent
                 self.graph.add_edge(x_new, x_near)  # adds edge to new parent
+        # print('out - rewire neighbors')
 
     def propogate_descendents(self):
         """
