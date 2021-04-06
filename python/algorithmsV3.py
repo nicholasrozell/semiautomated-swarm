@@ -215,8 +215,10 @@ class BaseRRT:
         """
         cost = 0
         while v != self.x_init:
+            # print('child :  ', v)
             cost += self.graph._node[v]
             v = self.parent(v)
+            # print('parent :  ', v)
         return cost
 
     def g(self, v):
@@ -230,7 +232,7 @@ class RRT(BaseRRT):
         self.orphans = []
         super().__init__(graph, x_init, x_goal, delta, k, path)
 
-    def extend(self, x_new, x_nearest, r):
+    def extend(self, x_new, x_nearest):
         X_near = self.near(x_new, self.delta)
         self.graph.add_node(x_new, dist(x_nearest, x_new))
         self.find_parent(x_new, x_nearest, X_near)
@@ -270,7 +272,7 @@ class RRT(BaseRRT):
             return
         leaves = []
         for n in self.graph._node:
-            if self.is_leaf(n) and not self.is_orphans(n):
+            if self.is_leaf(n) and not self.is_orphan(n):
                 leaves.append(n)
         if leaves == []:
             return
@@ -280,7 +282,7 @@ class RRT(BaseRRT):
                 if self.graph.collision_free(nearest, n):
                     self.graph.add_edge(nearest, n)
                     leaves.append(n)
-                    self.orpahns.remove(n)
+                    self.orphans.remove(n)
 
     def search(self):
         if self.graph.num_nodes() == 0:
@@ -289,11 +291,11 @@ class RRT(BaseRRT):
         x_rand = self.sample_free()
         x_nearest = self.nearest(x_rand, r)
         x_new = self.steer(x_nearest, x_rand)
-        X_near = self.extend(x_new, x_nearest, r)
+        X_near = self.extend(x_new, x_nearest)
         if self.is_orphan(x_new):
             self.orphans.append(x_new)
         if x_new in self.graph._node:
             self.rewire_neighbors(x_new, X_near)
-            # self.reduce_inconsistency()
+            self.reduce_inconsistency()
         self.connect_to_goal(x_new)
         return self.compute_trajectory()
