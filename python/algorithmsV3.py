@@ -157,7 +157,7 @@ class BaseRRT:
         for leaf in leaves:
             theta = angle(self.parent(leaf), leaf)
             temp = tuple((leaf[0] + (self.range) * np.cos(theta), leaf[1] + (self.range) * np.sin(theta), self.graph.span[2][0]))
-            temp = self.saturate(leaf, self.x_goal, self.delta)
+            temp = self.saturate(leaf, self.x_goal, self.range)
             if self.graph.collision_free(leaf, temp):
                 nodes.append(leaf)
         if nodes != []:
@@ -262,14 +262,14 @@ class MiniRRT(BaseRRT):
     def find_parent(self, x_new, x_min, X_near):
         """
         Finds the best parent to node x_new.
-        """       
-        # if self.graph.collision_free(x_min, x_new):    
-        c_min = self.cost(x_min) + dist(x_min, x_new)
-        for x_near in X_near:
-            if self.graph.collision_free(x_near, x_new) and self.cost(x_near) + dist(x_near, x_new) < c_min:
-                x_min = x_near
-                c_min = self.cost(x_near) + dist(x_near, x_new)
-        self.graph.add_edge(x_min, x_new)
+        """ 
+        if self.graph.collision_free(x_min, x_new): # <- this line causing issues
+            c_min = self.cost(x_min) + dist(x_min, x_new)
+            for x_near in X_near:
+                if self.graph.collision_free(x_near, x_new) and self.cost(x_near) + dist(x_near, x_new) < c_min:
+                    x_min = x_near
+                    c_min = self.cost(x_near) + dist(x_near, x_new)
+            self.graph.add_edge(x_min, x_new)
         # self.graph._node[x_new] = dist(x_min, x_new)
 
     def rewire_neighbors(self, x_new, X_near):
@@ -289,14 +289,13 @@ class MiniRRT(BaseRRT):
         """
         Connects potential orphans to leafs in tree.
         """
-        if self.orphans is []:
+        if self.orphans == []:
             return
         leaves = []
         for n in self.graph._node:
             if self.is_leaf(n) and not self.is_orphan(n):
                 leaves.append(n)
-        if leaves == []:
-            return
+        # print('leaves :  ', leaves)
         for n in self.orphans:
             if self.graph.obstacle_free(n):
                 nearest = self.brute_force(n, leaves)
@@ -321,7 +320,7 @@ class MiniRRT(BaseRRT):
             self.orphans.append(x_new)
         if x_new in self.graph._node:
             self.rewire_neighbors(x_new, X_near)
-            self.reduce_inconsistency()
+            # self.reduce_inconsistency()
         # if self.graph.num_nodes() < 250:
         #     return None
         self.connect_to_goal(x_new)
