@@ -8,7 +8,7 @@ from std_msgs.msg import Float64
 from sensor_msgs.msg import NavSatFix
 
 from FrameConversions import Frame
-from graphV2 import Graph
+from graph import Graph
 from algorithmsV3 import MiniRRT as RRT
 from utils import dist
 
@@ -110,9 +110,7 @@ class PathPlanning:
             rate.sleep()
         
         print('Calculating Trajectory...\n')
-        count = 0
         while not rospy.is_shutdown():
-            print(count)
             if graph.num_nodes() == 0:
                 rrt = RRT(graph, init, goal, delta, k, path)
             if graph.num_nodes() <= 250:
@@ -155,7 +153,6 @@ class PathPlanning:
                     print('Goal Reached')
                     print(trail)
                     break
-            count += 1
         
             # self.graph.update_obstacles()
 
