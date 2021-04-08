@@ -39,7 +39,7 @@ def draw(graph, s, g, path=None, enodes=[], leaves=[]):
     # plt.pause(1)
     # plt.close()
 
-def draw2(graph, s, g, path=None, leaves=None):
+def draw2(graph, s, g, path=None, position=None):
     """
     Plots the graph.
     """
@@ -56,18 +56,17 @@ def draw2(graph, s, g, path=None, leaves=None):
         plt.plot(x, y, c='#00008B', lw='0.5', zorder=1)
     if path is not None:
         for i in range(len(path)):
-            # print(i)
             for j in range(len(path[i])-1):
-                # print(j)
                 x = ([path[i][j][0], path[i][j+1][0]])
                 y = ([path[i][j][1], path[i][j+1][1]])
-                plt.plot(x, y, c='#0000FF', lw='0.5', zorder=2)
+                plt.plot(x, y, c='#006400', lw='0.5', zorder=2)
                 if j == 0:
                     plt.scatter(x, y, s=5, c='#FF0000', zorder=3)
-    if leaves != None:
-        for leaf in leaves:
-            x, y, z = leaf
-            plt.scatter(x, y, s=2, c='#008000', zorder=2)
+    if position != None:
+        for i in range(len(position)-1):
+            x = ([position[i][0], position[i+1][0]])
+            y = ([position[i][1], position[i+1][1]])
+            plt.plot(x, y, lw=1.5, c='#9400D3', zorder=2)
     if graph.obstacles != []:
         for o in graph.obstacles:
             x, y = list(o.exterior.xy)
