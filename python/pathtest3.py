@@ -92,7 +92,7 @@ class PathPlanning:
                      (Point(1800, 1000).buffer(200)),
                      (Point(2000, 1400).buffer(200)),
                      (Point(1200, 1800).buffer(200))]  
-        # obstacles = [Point(2000, 1400).buffer(1200)]      
+        # obstacles = [Point(2000, 1400).buffer(1200)]  
         init = self.pos
         goal = (2300.0, 2600.0, -50.0)
         delta = 100
@@ -102,6 +102,7 @@ class PathPlanning:
         path = None
         obstacles = None
         previous_path = None
+        uav_pos = [self.pos]
         trail = []
 
         start_index = 0
@@ -118,8 +119,8 @@ class PathPlanning:
  
             else:
                 init = path[path.index(rrt.brute_force(self.pos, path))+1]
+                uav_pos.append(self.pos)
                 trail.append(path)
-                # print(trail, '\n')
 
                 rate.sleep()
                 graph.clear()
@@ -149,13 +150,12 @@ class PathPlanning:
                 rate.sleep()
 
             if path is not None:
-                if goal in path or dist(self.pos, goal) <= delta*3:
-                    print('Goal Reached')
-                    print(trail)
+                if dist(self.pos, goal) <= delta*3 or goal in path:
+                    print('Goal Reached\n')
+                    print('uav postions :  ', uav_pos, '\n')
+                    print('trail :  ', trail, '\n')
                     break
         
-            # self.graph.update_obstacles()
-
 if __name__ == '__main__':
     pp = PathPlanning()
     pp.main()
