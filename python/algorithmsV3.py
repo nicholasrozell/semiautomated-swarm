@@ -157,8 +157,8 @@ class BaseRRT:
         for leaf in leaves:
             theta = angle(self.parent(leaf), leaf)
             temp = tuple((leaf[0] + (self.range) * np.cos(theta), leaf[1] + (self.range) * np.sin(theta), self.graph.span[2][0]))
-            temp = self.saturate(leaf, self.x_goal, self.range)
-            if self.graph.collision_free(leaf, temp):
+            # temp = self.saturate(leaf, self.x_goal, self.range)
+            if self.graph.collision_free(leaf, temp) and self.depth(leaf) > 3:
                 nodes.append(leaf)
         if nodes != []:
             return self.brute_force(self.x_goal, nodes)
@@ -227,7 +227,7 @@ class BaseRRT:
         # return cost
 
         cost = 0
-        while child != self.x_init:  # child is its own parent never reaches root node to exit            
+        while child != self.x_init:           
             parent = self.parent(child)
             if parent == None:
                 return float('inf')
@@ -295,14 +295,20 @@ class MiniRRT(BaseRRT):
         for n in self.graph._node:
             if self.is_leaf(n) and not self.is_orphan(n):
                 leaves.append(n)
-        # print('leaves :  ', leaves)
-        for n in self.orphans:
-            if self.graph.obstacle_free(n):
-                nearest = self.brute_force(n, leaves)
-                if self.graph.collision_free(nearest, n):
-                    self.graph.add_edge(nearest, n)
-                    leaves.append(n)
-                    self.orphans.remove(n)
+        # for n in self.orphans:
+        #     if self.graph.obstacle_free(n):
+        #         nearest = self.brute_force(n, leaves)
+        #         if self.graph.collision_free(nearest, n):
+        #             self.graph.add_edge(nearest, n)
+        #             leaves.append(n)
+        #             self.orphans.remove(n)
+
+        for leaf in leaves:
+            nearest = self.brute_force(leaf, self.orphans)
+            if self.graph.collision_free(leaf, nearest):
+                self.graph.add_edge(leaf, nearest)
+                leaves.append(nearest)
+                self.orphans.remove(nearest)
 
     def search(self):
         """
@@ -321,8 +327,6 @@ class MiniRRT(BaseRRT):
         if x_new in self.graph._node:
             self.rewire_neighbors(x_new, X_near)
             # self.reduce_inconsistency()
-        # if self.graph.num_nodes() < 250:
-        #     return None
         self.connect_to_goal(x_new)
         return self.compute_trajectory()
 
