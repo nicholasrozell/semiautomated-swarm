@@ -82,7 +82,6 @@ class PathPlanning:
         start_time = rospy.get_time()
         rate.sleep()
 
-
         dims = np.array([(-500, 2500), (-100, 2900), (-50, -50)])
         obstacles = [(Point(1250, 1000).buffer(200)), 
                      (Point(1500, 1500).buffer(200)),
@@ -92,7 +91,7 @@ class PathPlanning:
                      (Point(1800, 1000).buffer(200)),
                      (Point(2000, 1400).buffer(200)),
                      (Point(1200, 1800).buffer(200))]  
-        # obstacles = [Point(2000, 1400).buffer(1200)]  
+        # obstacles = [Point(2000, 1400).buffer(1200)]
         init = self.pos
         goal = (2300.0, 2600.0, -50.0)
         delta = 100
@@ -115,12 +114,14 @@ class PathPlanning:
             if graph.num_nodes() == 0:
                 rrt = RRT(graph, init, goal, delta, k, path)
             if graph.num_nodes() <= 250:
-                path = rrt.search()
- 
+                path, leaves = rrt.search()
+
             else:
                 init = path[path.index(rrt.brute_force(self.pos, path))+1]
                 uav_pos.append(self.pos)
                 trail.append(path)
+                print(leaves, '\n')
+                print(trail)
 
                 rate.sleep()
                 graph.clear()
@@ -145,6 +146,7 @@ class PathPlanning:
 
                 # if previous_path != path:
                 start_index += path.index(rrt.brute_force(self.pos, path))+1
+                # nearest_neighbor that is not the parent of (self.pos)
                     # previous_path = path
 
                 rate.sleep()
