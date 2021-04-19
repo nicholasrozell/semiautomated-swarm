@@ -1,5 +1,5 @@
 import numpy as np
-from utils import dist, angle
+from utils import dist, angle, bspline
 
 class BaseRRT:
     def __init__(self, graph, x_init, x_goal, delta, k, path):
@@ -71,7 +71,12 @@ class BaseRRT:
         """
         if dist(x_nearest, x_rand) > self.delta:
             return self.bound_point(self.saturate(x_nearest, x_rand, self.delta))
-        return self.bound_point(x_rand)
+        # if dist(x_nearest, x_rand) > self.delta*1.5:
+            # return self.bound_point(self.saturate(x_nearest, x_rand, self.delta*1.5))
+        # elif dist(x_nearest, x_rand) < self.delta*0.5:
+            # return self.bound_point(self.saturate(x_nearest, x_rand, self.delta*0.5))
+        else:
+            return self.bound_point(x_rand)
 
     def bound_point(self, node):
         """
@@ -90,7 +95,6 @@ class BaseRRT:
         u = z / np.sqrt((np.sum(z**2)))
         saturated_node = start + u*delta
         return tuple(saturated_node)
-
 
     def shrinking_ball_radius(self):
         """
@@ -143,7 +147,7 @@ class BaseRRT:
         Checks the depth of the node 'child'.
         """
         node_depth = 0
-        while self.parent(child) != self.x_init:
+        while child != self.x_init:
             node_depth += 1
             child = self.parent(child)
         return node_depth
@@ -152,27 +156,26 @@ class BaseRRT:
         """
         Finds the closest leaf to the goal.
         """
-        # Old Method
         nodes = []
         for leaf in leaves:
             theta = angle(self.parent(leaf), leaf)
             temp = tuple((leaf[0] + (self.range) * np.cos(theta), leaf[1] + (self.range) * np.sin(theta), self.graph.span[2][0]))
             # temp = self.saturate(leaf, self.x_goal, self.range)
-            if self.graph.collision_free(leaf, temp) and self.depth(leaf) > 3:
+            if self.graph.collision_free(leaf, temp): # and self.depth(leaf) > 3:
                 nodes.append(leaf)
         if nodes != []:
             return self.brute_force(self.x_goal, nodes)
 
-        # New Method
+        # goal = None
         # best = float('inf')
         # for leaf in leaves:
         #     theta = angle(self.parent(leaf), leaf)
         #     temp = tuple((leaf[0] + (self.range) * np.cos(theta), leaf[1] + (self.range) * np.sin(theta), self.graph.span[2][0]))
         #     temp = self.saturate(leaf, self.x_goal, self.delta)
         #     if self.graph.collision_free(leaf, temp) and self.depth(leaf) > 4:
-        #         self.graph._node[leaf] = self.g(leaf) - self.cost(leaf)
-        #         if self.graph._node[leaf] < best:
-        #             best = self.graph._node[leaf]
+        #         cost = self.g(leaf) - self.cost(leaf)
+        #         if cost < best:
+        #             best = cost
         #             goal = leaf
         # return goal
 
@@ -195,10 +198,12 @@ class BaseRRT:
         for n in self.graph._node:
             if self.is_leaf(n) and not self.is_orphan(n):
                 leaves.append(n)
+        # print(leaves)
         leaf = self.best_leaf(leaves)
         if leaf is None:
             return None
-        return self.construct_path(self.x_init, leaf)
+        path = bspline(self.construct_path(self.x_init, leaf), n=4, degree=2)
+        return tuple(map(tuple, path)), leaves
 
     def construct_path(self, start, end):
         """
@@ -216,13 +221,13 @@ class BaseRRT:
 
     def cost(self, child):
         """
-        Calculates the cost between nodes until the root node is reached.
+        Calculates the cost between nodes rootward until the root node is reached.
         """
         # cost = 0
-        # while v != self.x_init:
-        #     cost += self.graph._node[v]
-        #     v = self.parent(v)
-        #     if v == None:
+        # while child != self.x_init:
+        #     cost += self.graph._node[child]
+        #     child = self.parent(child)
+        #     if child == None:
         #         return float('inf')
         # return cost
 
@@ -280,6 +285,7 @@ class MiniRRT(BaseRRT):
             if self.graph.collision_free(x_new, x_near) and self.cost(x_new) + dist(x_new, x_near) < self.cost(x_near):
                 x_parent = self.parent(x_near)
                 if x_parent == None:
+                    self.orphans.append(x_near)
                     continue
                 self.graph.remove_edge(x_parent, x_near)
                 self.graph.add_edge(x_new, x_near)
@@ -295,20 +301,21 @@ class MiniRRT(BaseRRT):
         for n in self.graph._node:
             if self.is_leaf(n) and not self.is_orphan(n):
                 leaves.append(n)
-        # for n in self.orphans:
-        #     if self.graph.obstacle_free(n):
-        #         nearest = self.brute_force(n, leaves)
-        #         if self.graph.collision_free(nearest, n):
-        #             self.graph.add_edge(nearest, n)
-        #             leaves.append(n)
-        #             self.orphans.remove(n)
 
-        for leaf in leaves:
-            nearest = self.brute_force(leaf, self.orphans)
-            if self.graph.collision_free(leaf, nearest):
-                self.graph.add_edge(leaf, nearest)
-                leaves.append(nearest)
-                self.orphans.remove(nearest)
+        for n in self.orphans:
+            if self.graph.obstacle_free(n):
+                nearest = self.brute_force(n, leaves)
+                if self.graph.collision_free(nearest, n):
+                    self.graph.add_edge(nearest, n)
+                    leaves.append(n)
+                    self.orphans.remove(n)
+
+        # for leaf in leaves:
+        #     nearest = self.brute_force(leaf, self.orphans)
+        #     if self.graph.collision_free(leaf, nearest):
+        #         self.graph.add_edge(leaf, nearest)
+        #         leaves.append(nearest)
+        #         self.orphans.remove(nearest)
 
     def search(self):
         """
@@ -321,78 +328,12 @@ class MiniRRT(BaseRRT):
         x_rand = self.sample_free()
         x_nearest = self.nearest(x_rand, r)
         x_new = self.steer(x_nearest, x_rand)
+        # if self.graph.collision_free(x_nearest, x_new):
         X_near = self.extend(x_new, x_nearest)
-        if self.is_orphan(x_new):
-            self.orphans.append(x_new)
+        # if self.is_orphan(x_new):
+            # self.orphans.append(x_new)
         if x_new in self.graph._node:
             self.rewire_neighbors(x_new, X_near)
             # self.reduce_inconsistency()
         self.connect_to_goal(x_new)
-        return self.compute_trajectory()
-
-
-class RRT(BaseRRT):
-    """
-    Class for basic RRT.
-    """
-    def __init__(self, graph, x_init, x_goal, delta, k, path):
-        super().__init__(graph, x_init, x_goal, delta, k, path)
-
-    def search(self):
-        """
-        Main function
-        """
-        if self.graph.num_nodes() == 0:
-            self.graph.add_node(self.x_init, 0)
-        r = self.shrinking_ball_radius()
-        x_rand = self.sample_free()
-        x_nearest = self.nearest(x_rand, r)
-        x_new = self.steer(x_nearest, x_rand)
-        if self.graph.collision_free(x_nearest, x_new):
-            self.graph.add_node(x_new, dist(x_nearest, x_new))
-            self.graph.add_edge(x_nearest, x_new)
-        self.connect_to_goal(x_new)
-        return self.compute_trajectory()
-
-
-class RRTStar(BaseRRT):
-    """
-    Class for optimal RRT.
-    """
-    def __init__(self, graph, x_init, x_goal, delta, k, path):
-        super().__init__(graph, x_init, x_goal, delta, k, path)
-
-    def search(self):
-        """
-        Main function
-        """
-        if self.graph.num_nodes() == 0:
-            self.graph.add_node(self.x_init, 0)
-        r = self.shrinking_ball_radius()
-        x_rand = self.sample_free()
-        x_nearest = self.nearest(x_rand, r)
-        x_new = self.steer(x_nearest, x_rand)
-        if self.graph.collision_free(x_nearest, x_new):
-            X_near = self.near(x_new, self.delta)
-            self.graph.add_node(x_new, dist(x_nearest, x_new))
-            x_min = x_nearest
-            c_min = self.cost(x_nearest) + dist(x_nearest, x_new)            
-            for x_near in X_near:
-                if self.graph.collision_free(x_near, x_new) and self.cost(x_near) + dist(x_near, x_new) < c_min:
-                    x_min = x_near
-                    c_min = self.cost(x_near) + dist(x_near, x_new)
-            self.graph.add_edge(x_min, x_new)
-            self.graph._node[x_new] = dist(x_min, x_new)
-            for x_near in X_near:# - set(self.parent(x_new)):
-                # if x_near == self.parent(x_new):
-                    # continue
-                if self.graph.collision_free(x_new, x_near) and self.cost(x_new) + dist(x_new, x_near) < self.cost(x_near):
-                    x_parent = self.parent(x_near)
-                    self.graph.remove_edge(x_parent, x_near)
-                    self.graph.add_edge(x_new, x_near)
-                    self.graph._node[x_near] = dist(x_new, x_near)
-            # print('{}%'.format(round((self.graph.num_nodes()/self.max_nodes) * 100)), end='\r')
-        # print('{}%\n'.format(round((self.graph.num_nodes()/self.max_nodes) * 100)))
-        if self.graph.num_nodes() < 250:
-            return None
         return self.compute_trajectory()
