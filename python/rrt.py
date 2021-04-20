@@ -213,7 +213,7 @@ class BaseRRT:
         return dist(v, self.x_goal)
 
 
-class MiniRRT(BaseRRT):
+class MiniRRTStar(BaseRRT):
     """
     Class for optimal imcrementail RRT.
     """
