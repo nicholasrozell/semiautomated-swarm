@@ -26,7 +26,7 @@ class BaseRRT:
             theta = np.random.uniform() * self.alpha + (np.radians(0) - self.alpha/2)  # initial tree sample free, bounds to angle
         else:
             theta = np.random.uniform() * self.alpha + (angle(self.path[0], self.path[1]) - self.alpha/2)  # trees after sample free, bounds to angle
-        return tuple((self.x_init[0] + r * np.cos(theta), self.x_init[1] + r * np.sin(theta), self.graph.span[2][0]))  # random tuple
+        return tuple((self.x_init[0] + r * np.cos(theta), self.x_init[1] + r * np.sin(theta), self.graph.dims[2][0]))  # random tuple
 
     def nearest(self, v, r):
         """
@@ -49,9 +49,9 @@ class BaseRRT:
         """
         circle_x, circle_y, circle_z = pivot
         nodes = []
-        for n in self.graph._node:
+        for n in self.graph.nodes():
             x, y, z = n
-            if ((x - circle_x) * (x - circle_x) + (y - circle_y) * (y - circle_y)) <= radius * radius: # checks if node is within circle radius
+            if ((x - circle_x) * (x - circle_x) + (y - circle_y) * (y - circle_y)) <= radius * radius:
                 nodes.append((x, y, z))
         return nodes
 
@@ -82,8 +82,8 @@ class BaseRRT:
         """
         Bounds a node to within the graph.
         """
-        node = np.maximum(node, self.graph.span[:, 0])
-        node = np.minimum(node, self.graph.span[:, 1])
+        node = np.maximum(node, self.graph.dims[:, 0])
+        node = np.minimum(node, self.graph.dims[:, 1])
         return tuple(node)
 
     def saturate(self, v, w, delta):
@@ -102,13 +102,13 @@ class BaseRRT:
         Otte and Frazzoli, and Karaman and LaValle define shrinkging ball radius differently from each other
         This method is from Otte and Frazzoli
         """
-        d = self.graph.dimensions  # dimensions of the graph
-        leb_meas = (self.graph.span[0][1] - self.graph.span[0][0]) * (self.graph.span[1][1] - self.graph.span[1][0])  # calculates the lebesque measure, https://en.wikipedia.org/wiki/Lebesgue_measure
+        d = self.graph.num_dims  # #-dimensions of the graph
+        leb_meas = (self.graph.dims[0][1] - self.graph.dims[0][0]) * (self.graph.dims[1][1] - self.graph.dims[1][0])  # calculates the lebesque measure, https://en.wikipedia.org/wiki/Lebesgue_measure
         zeta_D = (4.0/3.0) * self.delta**3  # volume of unit ball
         gamma = (2**d*(1 + (1/d))*leb_meas)**self.k  # gamma variable
         r = int(((gamma/zeta_D)*(np.log10(self.graph.num_nodes())/self.graph.num_nodes())))**(1/d)  # radius
         if r == 0.0:
-            r = self.graph.span[0][1] + self.graph.span[1][1]
+            r = self.graph.dims[0][1] + self.graph.dims[1][1]
         return r
 
     def parent(self, v):
@@ -133,11 +133,21 @@ class BaseRRT:
             return True
         return False
 
+    def depth(self, child):
+        """
+        Checks the depth of the node 'child'.
+        """
+        node_depth = 0
+        while self.parent(child) != self.x_init:
+            node_depth += 1
+            child = self.parent(child)
+        return node_depth
+
     def connect_to_goal(self, v):
         """
         Adds goal to graph.
         """
-        if self.x_goal in self.graph._node:
+        if self.x_goal in self.graph.nodes():
             return
         if dist(self.x_goal, v) < self.delta:
             self.graph.add_node(self.x_goal, dist(v, self.x_goal))
@@ -162,11 +172,11 @@ class BaseRRT:
         Finds the best leaf in the group of leaves based off of distance to the goal.
         """
         best = float('inf')
-        if self.x_goal in self.graph._node:
+        if self.x_goal in self.graph.nodes():
             return self.x_goal
         for leaf in leaves:
             # theta = angle(self.parent(leaf), leaf)
-            # temp = tuple((leaf[0] + (self.delta*2) * np.cos(theta), leaf[1] + (self.delta*2) * np.sin(theta), self.graph.span[2][0]))
+            # temp = tuple((leaf[0] + (self.delta*2) * np.cos(theta), leaf[1] + (self.delta*2) * np.sin(theta), self.graph.dims[2][0]))
             # if self.graph.collision_free(leaf, temp):
             #     temp_cost = self.p_cost(temp)
             # else:
@@ -184,8 +194,8 @@ class BaseRRT:
         Computers the trajectory.
         """
         leaves = []
-        for n in self.graph._node:
-            if self.is_leaf(n) and not self.is_orphan(n):
+        for n in self.graph.nodes():
+            if self.is_leaf(n):
                 leaves.append(n)
         # print(leaves)
         leaf = self.best_leaf(leaves)
@@ -220,28 +230,48 @@ class MiniRRTStar(BaseRRT):
     def __init__(self, graph, x_init, x_goal, delta, k, path):
         super().__init__(graph, x_init, x_goal, delta, k, path)
 
-    def extend(self):
-        pass
+    def extend(self, x_new, x_nearest):
+        """
+        Expands the tree out into the frontier.
+        """
+        X_near = self.near(x_new, self.delta)
+        self.graph.add_node(x_new, dist(x_nearest, x_new))
+        self.find_parent(x_new, x_nearest, X_near)
+        return X_near
 
-    def find_parent(self):
-        pass
+    def find_parent(self, x_new, x_min, X_near):
+        c_min = self.cost(x_min) + dist(x_min, x_new)
+        for x_near in X_near:
+            if self.cost(x_near) + dist(x_near, x_new) < c_min:
+                x_min = x_near
+                c_min = self.cost(x_near) + dist(x_near, x_new)
+        self.graph.add_edge(x_min, x_new)
+        self.graph._node[x_new] = dist(x_min, x_new)
 
-    def rewire_neighbors(self):
-        pass
+    def rewire_neighbors(self, x_new, X_near):
+        """
+        Rewires the tree to nodes that are closer to the new node.
+        """
+        for x_near in X_near:
+            if self.cost(x_new) + dist(x_new, x_near) < self.cost(x_near):
+                x_parent = self.parent(x_near)
+                self.graph.remove_edge(x_parent, x_near)
+                self.graph.add_edge(x_new, x_near)
+                self.graph._node[x_near] = dist(x_new, x_near)
 
     def search(self):
         """
         Function to search through the graph.
         """
-        if self.graph.num_nodes() == 0:
-            self.graph.add_node(self.x_init)
-        r = self.shrinking_ball_radius()
-        x_rand = self.sample_free()
-        x_nearest = self.nearest(x_rand, r)
-        x_new = self.steer(x_nearest, x_rand)
+        self.graph.add_node(self.x_init, 0)
+        while self.graph.num_nodes() <= 300:
+            r = self.shrinking_ball_radius()
+            x_rand = self.sample_free()
+            x_nearest = self.nearest(x_rand, r)
+            x_new = self.steer(x_nearest, x_rand)
 
-        X_near = self.extend(x_new, x_nearest)
-        self.rewire_neighbors(x_new, X_near)
+            X_near = self.extend(x_new, x_nearest)
+            self.rewire_neighbors(x_new, X_near)
 
-        self.connect_to_goal(x_new)
+            self.connect_to_goal(x_new)
         return self.compute_trajectory()
