@@ -2,7 +2,7 @@ class Graph:
     """
     Base class for graphs.
     """
-    def __init__(self, length, width, height):
+    def __init__(self, dims):
         self.graph_attr_dict_factory = dict
         self.node_dict_factory = dict
         self.node_attr_dict_factory = dict
@@ -18,8 +18,8 @@ class Graph:
         self._succ = self._adj
         self._edge = self.edge_list_factory()
 
-        self.area = (length, width, height)
-        self.dimensions = len(self.area)
+        self.dims = dims
+        self.num_dims = len(self.dims)
 
     def nodes(self):
         return self._node.keys()
@@ -135,9 +135,6 @@ class Graph:
         """
         nbrs = self._succ[v]
         return len(nbrs) + (v in nbrs)
-
-    def depth(self):
-        pass
 
     def clear(self):
         """
