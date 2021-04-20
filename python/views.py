@@ -6,8 +6,8 @@ def draw(graph, s, g, path=None, leaves=None):
     Plots the graph.
     """
     plt.figure(figsize=[9, 8])
-    plt.xlim(graph.span[0][0], graph.span[0][1])
-    plt.ylim(graph.span[1][0], graph.span[1][1])
+    plt.xlim(graph.dims[0][0], graph.dims[0][1])
+    plt.ylim(graph.dims[1][0], graph.dims[1][1])
     plt.grid(linestyle='-.')
     for n in graph._node:
         x, y, z = n
@@ -28,10 +28,10 @@ def draw(graph, s, g, path=None, leaves=None):
         for leaf in leaves:
             x, y, z = leaf
             plt.scatter(x, y, s=2, c='#008000', zorder=2)
-    if graph.obstacles != []:
-        for o in graph.obstacles:
-            x, y = list(o.exterior.xy)
-            plt.plot(x, y, c='#000000', zorder=1)
+    # if graph.obstacles != []:
+    #     for o in graph.obstacles:
+    #         x, y = list(o.exterior.xy)
+    #         plt.plot(x, y, c='#000000', zorder=1)
     plt.scatter(s[0], s[1], s=50, c='#000000', marker='s', zorder=0)
     plt.scatter(s[0], s[1], s=40, c='#FFFF00', marker='s', zorder=0)
     plt.scatter(g[0], g[1], s=100, c='#FF00FF', marker='s', zorder=0)
