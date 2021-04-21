@@ -41,6 +41,7 @@ def main():
 
             graph.clear()
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     main()
-    print('TERMINATED')       
+    print('TERMINATED')
