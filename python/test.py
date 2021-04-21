@@ -23,20 +23,23 @@ def main():
 
     print('Calculating Trajectory...\n')
     while 1:
-        rrt = RRT(graph, init, goal, delta, k, path)
+        if graph.num_nodes() == 0:
+            rrt = RRT(graph, init, goal, delta, k, path)
+        if graph.num_nodes() <= 250:
+            path, leaves = rrt.search()
+        
+        else:
+            init = tuple(path[1])
+            PATH.append(path)
 
-        path, leaves = rrt.search()
-        PATH.append(path)
+            if dist(init, goal) <= delta:
+                print('Goal Reached.')
+                print('Search Time :  {} s\n'.format(round(time.time() - t1, 3)))
+                print('Generating plot...\n')
+                draw(graph, init, goal, PATH, leaves)
+                break
 
-        if dist(init, goal) <= delta:
-            print('Goal Reached.')
-            print('Search Time :  {} s\n'.format(round(time.time() - t1, 3)))
-            print('Generating plot...\n')
-            draw(graph, init, goal, PATH, leaves)
-            break
-
-        graph.clear()
-        init = tuple(path[1])
+            graph.clear()
 
 if __name__=='__main__':
     main()
