@@ -6,12 +6,13 @@ class BaseRRT:
     """
     Base class for rapidly-exploring random trees.
     """
-    def __init__(self, graph, x_init, x_goal, delta, k, path):
+    def __init__(self, graph, x_init, x_goal, delta, k, path, heading):
         self.graph = graph
         self.x_init = x_init
         self.x_goal = x_goal
         self.delta = delta
         self.k = k
+        self.heading = heading
 
         self.alpha = np.radians(120)
         self.path = path
@@ -23,7 +24,7 @@ class BaseRRT:
         """
         r = self.range * np.sqrt(np.random.uniform())
         if self.path is None:
-            theta = np.random.uniform() * self.alpha + (np.radians(0) - self.alpha/2)  # initial tree sample free, bounds to angle
+            theta = np.random.uniform() * self.alpha + (self.heading - self.alpha/2)  # initial tree sample free, bounds to angle
         else:
             theta = np.random.uniform() * self.alpha + (angle(self.path[0], self.path[1]) - self.alpha/2)  # trees after sample free, bounds to angle
         return tuple((self.x_init[0] + r * np.cos(theta), self.x_init[1] + r * np.sin(theta), self.graph.dims[2][0]))  # random tuple
@@ -228,8 +229,8 @@ class MiniRRTStar(BaseRRT):
     """
     Class for optimal imcrementail RRT.
     """
-    def __init__(self, graph, x_init, x_goal, delta, k, path):
-        super().__init__(graph, x_init, x_goal, delta, k, path)
+    def __init__(self, graph, x_init, x_goal, delta, k, path, heading):
+        super().__init__(graph, x_init, x_goal, delta, k, path, heading)
 
     def extend(self, x_new, x_nearest):
         """
