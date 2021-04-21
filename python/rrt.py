@@ -67,8 +67,8 @@ class BaseRRT:
                 nearest = n
         try:
             return nearest
-        except:
-            raise ('Bunch list is empty.')
+        except TypeError:
+            raise TypeError('Bunch list is empty.')
 
     def steer(self, x_nearest, x_rand):
         """
