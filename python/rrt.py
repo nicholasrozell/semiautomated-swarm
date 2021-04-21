@@ -201,7 +201,8 @@ class BaseRRT:
         leaf = self.best_leaf(leaves)
         if leaf is None:
             return None
-        path = bspline(self.construct_path(self.x_init, leaf), n=4, degree=2)
+        path = bspline(self.construct_path(self.x_init, leaf), n=10, degree=3)
+        # path = self.construct_path(self.x_init, leaf)
         return tuple(map(tuple, path)), leaves
 
     def cost(self, child):
