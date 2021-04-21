@@ -103,7 +103,6 @@ class PathPlanning:
             else:
                 init = path[path.index(rrt.brute_force(self.pos, path))+1]
                 trail.append(path)
-                print(leaves, '\n')
 
                 rate.sleep()
                 graph.clear()
