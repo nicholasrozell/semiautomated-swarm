@@ -94,7 +94,7 @@ class PathPlanning:
         while not self.home_set:
             rate.sleep()
 
-        print('Caclulating Trajectory...\n')
+        print('Calculating Trajectory...\n')
         while not rospy.is_shutdown():
             if graph.num_nodes() == 0:
                 rrt = RRT(graph, init, goal, delta, k, path, self.heading)
