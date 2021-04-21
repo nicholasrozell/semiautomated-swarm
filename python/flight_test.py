@@ -13,11 +13,12 @@ from graph import Graph
 from rrt import MiniRRTStar as RRT
 from utils import dist
 
+
 class PathPlanning:
     def __init__(self):
         print('\nINITIALIZING\n')
         self.home_pos_data = np.zeros(shape=(3,))
-        self.position = np.zeros(shape=(3,1))
+        self.position = np.zeros(shape=(3, 1))
         self.frame = Frame()
         self.heading = None
         self.home_set = False
@@ -123,7 +124,7 @@ class PathPlanning:
 
                 # print(wp_msg)
                 resp = wp_push(start_index, wp_msg)
-                print(resp,'\n')
+                print(resp, '\n')
 
                 start_index += path.index(rrt.brute_force(self.pos, path))+1
                 rate.sleep()
@@ -133,6 +134,7 @@ class PathPlanning:
                     print('Goal Reached\n')
                     print('trail :  ', trail, '\n')
                     break
+
 
 if __name__ == '__main__':
     pp = PathPlanning()
