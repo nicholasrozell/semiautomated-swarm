@@ -111,7 +111,7 @@ class PathPlanning:
 
                 pathNED = np.asarray(path)
         
-                                pathLLA = self.frame.ConvNED2LLA(pathNED.T)
+                pathLLA = self.frame.ConvNED2LLA(pathNED.T)
                 for i in range(len(pathNED)):
                     wp_point = Waypoint()
                     wp_point.frame = 3
