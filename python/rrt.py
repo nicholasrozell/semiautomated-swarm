@@ -12,7 +12,7 @@ class BaseRRT:
         self.x_goal = x_goal
         self.delta = delta
         self.k = k
-        self.heading = heading
+        self.heading = np.float64(str(heading)[5:])
 
         self.alpha = np.radians(120)
         self.path = path
