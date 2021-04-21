@@ -9,7 +9,7 @@ from sensor_msgs.msg import NavSatFix
 
 from FrameConversion import Frame
 
-from graph.import Graph
+from graph import Graph
 from rrt import MiniRRTStar as RRT
 from utils import dist
 
