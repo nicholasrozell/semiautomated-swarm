@@ -104,14 +104,14 @@ class PathPlanning:
                 init = path[path.index(rrt.brute_force(self.pos, path))+1]
                 trail.append(path)
                 print(leaves, '\n')
-                print(trail)
 
                 rate.sleep()
                 graph.clear()
 
                 pathNED = np.asarray(path)
-        
+                wp_msg = []
                 pathLLA = self.frame.ConvNED2LLA(pathNED.T)
+
                 for i in range(len(pathNED)):
                     wp_point = Waypoint()
                     wp_point.frame = 3
@@ -131,7 +131,6 @@ class PathPlanning:
             if path is not None:
                 if dist(self.pos, goal) <= delta*3 or goal in path:
                     print('Goal Reached\n')
-                    print('uav postions :  ', uav_pos, '\n')
                     print('trail :  ', trail, '\n')
                     break
 
