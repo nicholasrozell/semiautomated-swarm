@@ -7,7 +7,7 @@ from mavros_msgs.msg import HomePosition
 from std_msgs.msg import Float64
 from sensor_msgs.msg import NavSatFix
 
-from FrameConversion import Frame
+from FrameConversions import Frame
 
 from graph import Graph
 from rrt import MiniRRTStar as RRT
