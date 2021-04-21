@@ -87,7 +87,6 @@ class PathPlanning:
 
         graph = Graph(dims)
         path = None
-        Ppath = None
         trail = []
 
         start_index = 0
