@@ -1,5 +1,6 @@
 import rospy
 import numpy as np
+import time
 
 from mavros_msgs.msg import WaypointList, Waypoint
 from mavros_msgs.srv import WaypointPush
@@ -98,6 +99,7 @@ class PathPlanning:
         print('Calculating Trajectory...\n')
         while not rospy.is_shutdown():
             if graph.num_nodes() == 0:
+                t0 = time.time()
                 rrt = RRT(graph, init, goal, delta, k, path, self.heading)
             if graph.num_nodes() <= 250:
                 path, leaves = rrt.search()
@@ -127,6 +129,7 @@ class PathPlanning:
                 print(resp, '\n')
 
                 start_index += path.index(rrt.brute_force(self.pos, path))+1
+                print('Search Time: {} secs'.format(time.time() - t0))
                 rate.sleep()
 
             if path is not None:
