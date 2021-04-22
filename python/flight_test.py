@@ -126,10 +126,10 @@ class PathPlanning:
 
                 # print(wp_msg)
                 resp = wp_push(start_index, wp_msg)
-                print(resp, '\n')
+                print(resp)
 
                 start_index += path.index(rrt.brute_force(self.pos, path))+1
-                print('Search Time: {} secs'.format(time.time() - t0))
+                print('Search Time: {} secs\n'.format(time.time() - t0))
                 rate.sleep()
 
             if path is not None:
