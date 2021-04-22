@@ -88,6 +88,7 @@ class PathPlanning:
         graph = Graph(dims)
         path = None
         trail = []
+        position = []
 
         start_index = 0
 
@@ -103,6 +104,7 @@ class PathPlanning:
             else:
                 init = path[path.index(rrt.brute_force(self.pos, path))+1]
                 trail.append(path)
+                position.append(self.pos)
 
                 rate.sleep()
                 graph.clear()
@@ -131,6 +133,7 @@ class PathPlanning:
                 if dist(self.pos, goal) <= delta*3 or goal in path:
                     print('Goal Reached\n')
                     print('trail :  ', trail, '\n')
+                    print('position:  ', position, '\n')
                     break
 
 
