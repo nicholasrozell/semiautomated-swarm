@@ -144,16 +144,6 @@ class BaseRRT:
             child = self.parent(child)
         return node_depth
 
-    def connect_to_goal(self, v):
-        """
-        Adds goal to graph.
-        """
-        if self.x_goal in self.graph.nodes():
-            return
-        if dist(self.x_goal, v) < self.delta:
-            self.graph.add_node(self.x_goal, dist(v, self.x_goal))
-            self.graph.add_edge(v, self.x_goal)
-
     def construct_path(self, start, end):
         """
         Constructs a path between start to end.
@@ -216,6 +206,7 @@ class BaseRRT:
 class MiniRRTP(BaseRRT):
     """
     Class for optimal imcrementail RRT.
+    This class uses potential fields, so pgraph is needed.
     """
     def __init__(self, graph, x_init, x_goal, delta, k, path, heading):
         super().__init__(graph, x_init, x_goal, delta, k, path, heading)
@@ -260,6 +251,16 @@ class MiniRRTP(BaseRRT):
                 self.graph.remove_edge(x_parent, x_near)
                 self.graph.add_edge(x_new, x_near)
                 self.graph._node[x_near] = dist(x_new, x_near)
+
+    def connect_to_goal(self, v):
+        """
+        Adds goal to graph.
+        """
+        if self.x_goal in self.graph.nodes():
+            return
+        if dist(self.x_goal, v) < self.delta:
+            self.graph.add_node(self.x_goal, dist(v, self.x_goal))
+            self.graph.add_edge(v, self.x_goal)
 
     def search(self):
         """
@@ -325,6 +326,16 @@ class MiniRRT(BaseRRT):
                 x_parent = self.parent(x_near)
                 self.graph.remove_edge(x_parent, x_near)
                 self.graph.add_edge(x_new, x_near)
+
+    def connect_to_goal(self, v):
+        """
+        Adds goal to graph.
+        """
+        if self.x_goal in self.graph.nodes():
+            return
+        if dist(self.x_goal, v) < self.delta:
+            self.graph.add_node(self.x_goal)
+            self.graph.add_edge(v, self.x_goal)
 
     def search(self):
         """
