@@ -4,11 +4,11 @@ class Graph:
     """
     def __init__(self, dims):
         self.graph_attr_dict_factory = dict
-        self.node_dict_factory = dict
+        self.node_set_factory = set
         self.node_attr_dict_factory = dict
         self.adjlist_outer_dict_factory = dict
         self.adjlist_inner_dict_factory = dict
-        self.edge_list_factory = list
+        self.edge_set_factory = set
         self.edge_attr_dict_factory = dict
 
         self.graph = self.graph_attr_dict_factory()
@@ -22,7 +22,7 @@ class Graph:
         self.num_dims = len(self.dims)
 
     def nodes(self):
-        return self._node.keys()
+        return self._node
 
     def add_node(self, v, cost):
         """
@@ -31,7 +31,7 @@ class Graph:
         if v not in self._succ:
             self._succ[v] = self.adjlist_inner_dict_factory()
             self._pred[v] = self.adjlist_inner_dict_factory()
-            self._node[v] = cost
+            self._node.add(v)
 
     def remove_node(self, v):
         """
@@ -53,7 +53,7 @@ class Graph:
         """
         Returns the total number of nodes in the graph.
         """
-        return len(self._node.keys())
+        return len(self._node)
 
     def edges(self):
         return self._edge
@@ -69,7 +69,7 @@ class Graph:
             self._succ[v] = self.adjlist_inner_dict_factory()
             self._pred[v] = self.adjlist_inner_dict_factory()
         if (u, v) not in self._edge:
-            self._edge.append((u, v))
+            self._edge.add((u, v))
         datadict = self._adj[v].get(v, self.edge_attr_dict_factory())
         self._succ[u][v] = datadict
         self._pred[v][u] = datadict
