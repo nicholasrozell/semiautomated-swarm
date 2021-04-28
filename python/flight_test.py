@@ -10,8 +10,8 @@ from sensor_msgs.msg import NavSatFix
 
 from FrameConversions import Frame
 
-from graph import Graph
-from rrt import MiniRRTStar as RRT
+from pgraph import Graph
+from rrt import MiniRRTP
 from utils import dist
 
 
