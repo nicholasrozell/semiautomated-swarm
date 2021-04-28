@@ -16,7 +16,7 @@ class Graph:
         self._adj = self.adjlist_outer_dict_factory()
         self._pred = self.adjlist_outer_dict_factory()
         self._succ = self._adj
-        self._edge = self.edge_list_factory()
+        self._edge = self.edge_set_factory()
 
         self.dims = dims
         self.num_dims = len(self.dims)
