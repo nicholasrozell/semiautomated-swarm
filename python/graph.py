@@ -24,7 +24,7 @@ class Graph:
     def nodes(self):
         return self._node
 
-    def add_node(self, v, cost):
+    def add_node(self, v):
         """
         Add node 'v' to the graph and tag cost to node 'v'.
         """
