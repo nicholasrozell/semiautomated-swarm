@@ -206,18 +206,6 @@ class BaseRRT:
         # path = self.construct_path(self.x_init, leaf)
         return tuple(map(tuple, path)), leaves
 
-    def cost(self, child):
-        """
-        Calculates the cost between nodes rootward until the root node is reached.
-        """
-        cost = 0
-        while child != self.x_init:
-            cost += self.graph._node[child]
-            child = self.parent(child)
-            if child is None:
-                return float('inf')
-        return cost
-
     def g(self, v):
         """
         Returns the cost between node 'v' and the goal.
@@ -231,6 +219,18 @@ class MiniRRTP(BaseRRT):
     """
     def __init__(self, graph, x_init, x_goal, delta, k, path, heading):
         super().__init__(graph, x_init, x_goal, delta, k, path, heading)
+
+    def cost(self, child):
+        """
+        Calculates the cost between nodes rootward until the root node is reached.
+        """
+        cost = 0
+        while child != self.x_init:
+            cost += self.graph._node[child]
+            child = self.parent(child)
+            if child is None:
+                return float('inf')
+        return cost
 
     def extend(self, x_new, x_nearest):
         """
@@ -285,6 +285,19 @@ class MiniRRT(BaseRRT):
     """
     def __init__(self, graph, x_init, x_goal, delta, k, path, heading):
         super().__init__(graph, x_init, x_goal, delta, k, path, heading)
+
+    def cost(self, child):
+        """
+        Calculates the cost between nodes rootward until the root node is reached.
+        """
+        cost = 0
+        while child != self.x_init:
+            parent = self.parent(child)
+            if parent is None:
+                return float('inf')
+            cost += dist(parent, child)
+            child = parent
+        return cost
 
     def extend(self, x_new, x_nearest):
         """
