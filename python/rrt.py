@@ -225,7 +225,7 @@ class BaseRRT:
         return dist(v, self.x_goal)
 
 
-class MiniRRTStar(BaseRRT):
+class MiniRRTP(BaseRRT):
     """
     Class for optimal imcrementail RRT.
     """
@@ -266,6 +266,58 @@ class MiniRRTStar(BaseRRT):
         Function to search through the graph.
         """
         self.graph.add_node(self.x_init, 0)
+        while self.graph.num_nodes() <= 300:
+            r = self.shrinking_ball_radius()
+            x_rand = self.sample_free()
+            x_nearest = self.nearest(x_rand, r)
+            x_new = self.steer(x_nearest, x_rand)
+
+            X_near = self.extend(x_new, x_nearest)
+            self.rewire_neighbors(x_new, X_near)
+
+            self.connect_to_goal(x_new)
+        return self.compute_trajectory()
+
+
+class MiniRRT(BaseRRT):
+    """
+    Class for optimal imcrementail RRT.
+    """
+    def __init__(self, graph, x_init, x_goal, delta, k, path, heading):
+        super().__init__(graph, x_init, x_goal, delta, k, path, heading)
+
+    def extend(self, x_new, x_nearest):
+        """
+        Expands the tree out into the frontier.
+        """
+        X_near = self.near(x_new, self.delta)
+        self.graph.add_node(x_new)
+        self.find_parent(x_new, x_nearest, X_near)
+        return X_near
+
+    def find_parent(self, x_new, x_min, X_near):
+        c_min = self.cost(x_min) + dist(x_min, x_new)
+        for x_near in X_near:
+            if self.cost(x_near) + dist(x_near, x_new) < c_min:
+                x_min = x_near
+                c_min = self.cost(x_near) + dist(x_near, x_new)
+        self.graph.add_edge(x_min, x_new)
+
+    def rewire_neighbors(self, x_new, X_near):
+        """
+        Rewires the tree to nodes that are closer to the new node.
+        """
+        for x_near in X_near:
+            if self.cost(x_new) + dist(x_new, x_near) < self.cost(x_near):
+                x_parent = self.parent(x_near)
+                self.graph.remove_edge(x_parent, x_near)
+                self.graph.add_edge(x_new, x_near)
+
+    def search(self):
+        """
+        Function to search through the graph.
+        """
+        self.graph.add_node(self.x_init)
         while self.graph.num_nodes() <= 300:
             r = self.shrinking_ball_radius()
             x_rand = self.sample_free()
