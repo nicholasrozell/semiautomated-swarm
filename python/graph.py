@@ -12,7 +12,7 @@ class Graph:
         self.edge_attr_dict_factory = dict
 
         self.graph = self.graph_attr_dict_factory()
-        self._node = self.node_dict_factory()
+        self._node = self.node_set_factory()
         self._adj = self.adjlist_outer_dict_factory()
         self._pred = self.adjlist_outer_dict_factory()
         self._succ = self._adj
