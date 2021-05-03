@@ -5,7 +5,7 @@ class Graph:
     """
     Base class for graphs.
     """
-    def __init__(self, dims):
+    def __init__(self, dims, obstacles=[]):
         self.graph_attr_dict_factory = dict
         self.node_set_factory = set
         self.node_attr_dict_factory = dict
@@ -22,7 +22,8 @@ class Graph:
         self._edge = self.edge_set_factory()
 
         self.dims = dims
-        self.num_dims = len(self.dims)
+        self.num_dims = len(dims)
+        self.obstacles = obstacles
 
     def nodes(self):
         return self._node
