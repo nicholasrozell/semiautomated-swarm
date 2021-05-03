@@ -347,7 +347,7 @@ class MiniRRT(BaseRRT):
             x_rand = self.sample_free()
             x_nearest = self.nearest(x_rand, r)
             x_new = self.steer(x_nearest, x_rand)
-            if self.graph.collision(x_nearest, x_new):
+            if self.graph.collision_free(x_nearest, x_new):
                 X_near = self.extend(x_new, x_nearest)
             if x_new in self.graph.nodes():
                 self.rewire_neighbors(x_new, X_near)
