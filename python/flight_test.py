@@ -10,6 +10,8 @@ from sensor_msgs.msg import NavSatFix
 
 from FrameConversions import Frame
 
+from shapely.geometry.point import Point
+
 from graph import Graph
 from rrt import MiniRRT as RRT
 from utils import dist
@@ -81,12 +83,13 @@ class PathPlanning:
         rate.sleep()
 
         dims = np.array([(-500, 2500), (-100, 2900), (-50, -50)])
+        obstacle = [(Point(1200, 1000).buffer(300))]
         init = self.pos
         goal = (2300.0, 2600.0, -50.0)
         delta = 100
         k = 2
 
-        graph = Graph(dims)
+        graph = Graph(dims, obstacle)
         path = None
         trail = []
         position = []
