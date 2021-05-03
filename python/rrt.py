@@ -312,7 +312,7 @@ class MiniRRT(BaseRRT):
     def find_parent(self, x_new, x_min, X_near):
         c_min = self.cost(x_min) + dist(x_min, x_new)
         for x_near in X_near:
-            if self.cost(x_near) + dist(x_near, x_new) < c_min:
+            if self.graph.collision_free(x_near, x_new) and self.cost(x_near) + dist(x_near, x_new) < c_min:
                 x_min = x_near
                 c_min = self.cost(x_near) + dist(x_near, x_new)
         self.graph.add_edge(x_min, x_new)
@@ -322,7 +322,7 @@ class MiniRRT(BaseRRT):
         Rewires the tree to nodes that are closer to the new node.
         """
         for x_near in X_near:
-            if self.cost(x_new) + dist(x_new, x_near) < self.cost(x_near):
+            if self.graph.collision_free(x_new, x_near) and self.cost(x_new) + dist(x_new, x_near) < self.cost(x_near):
                 x_parent = self.parent(x_near)
                 self.graph.remove_edge(x_parent, x_near)
                 self.graph.add_edge(x_new, x_near)
