@@ -83,7 +83,7 @@ class PathPlanning:
         rate.sleep()
 
         dims = np.array([(-500, 2500), (-100, 2900), (-50, -50)])
-        obstacle = [(Point(1400, 1200).buffer(300))]
+        obstacle = [(Point(1200, 1400).buffer(300))]
         init = self.pos
         goal = (2300.0, 2600.0, -50.0)
         delta = 100
