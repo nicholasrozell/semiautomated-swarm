@@ -166,15 +166,15 @@ class BaseRRT:
         if self.x_goal in self.graph.nodes():
             return self.x_goal
         for leaf in leaves:
-            # theta = angle(self.parent(leaf), leaf)
-            # temp = tuple((leaf[0] + (self.delta*2) * np.cos(theta), leaf[1] + (self.delta*2) * np.sin(theta), self.graph.dims[2][0]))
-            # if self.graph.collision_free(leaf, temp):
-            #     temp_cost = self.p_cost(temp)
-            # else:
-            #     temp_cost = float('inf')
+            theta = angle(self.parent(leaf), leaf)
+            temp = tuple((leaf[0] + (self.delta*2) * np.cos(theta), leaf[1] + (self.delta*2) * np.sin(theta), self.graph.dims[2][0]))
+            if self.graph.collision_free(leaf, temp):
+                temp_cost = self.p_cost(temp)
+            else:
+                temp_cost = float('inf')
 
             if self.depth(leaf) > 3:
-                cost = self.g(leaf)  # + temp_cost
+                cost = self.g(leaf) + temp_cost
                 if cost <= best:
                     best = cost
                     goal = leaf
