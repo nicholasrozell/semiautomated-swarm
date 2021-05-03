@@ -1,3 +1,6 @@
+from shapely.geometry import LineString, Point
+
+
 class Graph:
     """
     Base class for graphs.
@@ -145,3 +148,17 @@ class Graph:
         self._node.clear()
         self._edge.clear()
         self.graph.clear()
+
+    def obstacle_free(self, v):
+        """
+        Checks if the node 'v' is free of an obstacle.
+        """
+        node = Point(v)
+        return not any(node.within(obstacle) for obstacle in self.obstacles)
+
+    def collision_free(self, u, v):
+        """
+        Checks if the edge 'u -- v' is free of collision.
+        """
+        edge = LineString([u, v])
+        return not any(edge.intersects(obstacle) for obstacle in self.obstacles)
