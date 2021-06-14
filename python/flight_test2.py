@@ -98,9 +98,18 @@ class PathPlanning:
         rate = rospy.Rate(1)    # send msgs at 1 Hz
         start_time = rospy.get_time()
         rate.sleep()
+
+        while not self.home_set:
+            rate.sleep()
+
+        # while loop for gps_check:
+        while self.gps_status == -1 or self.gps_status is None:
+            print("BAD GPS")
+            rate.sleep()
+
         #		   E-x	     N-y       D-z
         dims = np.array([(-80, 60), (-30, 40), (-2, -2)])
-        #dims = np.array([(-30, 40), (-80, 60), (-2, -2)])
+        # dims = np.array([(-30, 40), (-80, 60), (-2, -2)])
         init = self.pos
         goal = (-60, 20, -2.0)
         delta = 5
@@ -112,14 +121,6 @@ class PathPlanning:
         position = []
 
         start_index = 0
-
-        while not self.home_set:
-            rate.sleep()
-
-        # while loop for gps_check:
-        while self.gps_status == -1 or self.gps_status is None:
-            print("BAD GPS")
-            rate.sleep()
 
         print('Calculating Trajectory...\n')
         while not rospy.is_shutdown():
