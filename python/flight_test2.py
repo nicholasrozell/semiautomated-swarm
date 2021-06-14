@@ -99,12 +99,12 @@ class PathPlanning:
         start_time = rospy.get_time()
         rate.sleep()
 
-        while not self.home_set:
-            rate.sleep()
-
         # while loop for gps_check:
         while self.gps_status == -1 or self.gps_status is None:
             print("BAD GPS")
+            rate.sleep()
+
+        while not self.home_set:
             rate.sleep()
 
         #		   E-x	     N-y       D-z
