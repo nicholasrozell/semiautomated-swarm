@@ -1,0 +1,13 @@
+[Unit]
+Description=Executes swarmcontrol
+#Definition=
+Requires=mavproxy.service apmlaunch.service
+Before=mavproxy.service apmlaunch.service
+
+[Service]
+User=sparky
+ExecStart=/bin/bash /home/sparky/semiautomated-swarm/scripts/swarmcontrol.sh
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

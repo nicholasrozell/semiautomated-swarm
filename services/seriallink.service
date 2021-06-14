@@ -1,0 +1,12 @@
+[Unit]
+Description=Serial Link
+#Definition=
+Requires=mavproxy.service
+After=mavproxy.service
+
+[Service]
+ExecStart=/home/sparky/SeriaLink/build/SeriaLink
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

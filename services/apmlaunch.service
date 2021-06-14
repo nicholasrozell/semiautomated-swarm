@@ -1,0 +1,14 @@
+[Unit]
+Description=APM launch Script
+#Definition=
+Requires=mavproxy.service 
+#seriallink.service
+After=mavproxy.service 
+#seriallink.service
+
+[Service]
+ExecStart=/bin/bash /home/sparky/semiautomated-swarm/scripts/apmlaunch.sh
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

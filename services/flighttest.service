@@ -1,0 +1,14 @@
+[Unit]
+Description=Path Planning algorithm
+#Definition=
+Requires=swarmcontrol.service
+After=swarmcontrol.service
+
+[Service]
+User=sparky
+#ExecStartPre=/bin/sleep 25
+ExecStart=/bin/bash /home/sparky/semiautomated-swarm/scripts/flighttest2.sh
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
