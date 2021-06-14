@@ -55,17 +55,20 @@ class PathPlanning:
         self.heading = data
 
     def global_position(self, data):
-        self.position[0] = data.latitude
-        self.position[1] = data.longitude
-        self.position[2] = data.altitude
-        self.position = self.frame.ConvLLA2NED(self.position)
-
-        self.pos = np.ndarray.tolist(self.position.reshape((3,)))
-        self.pos[2] = -2
-        self.pos = tuple(self.pos)
-        #print(self.pos)
-
         self.gps_status = data.status.status
+
+        if self.gps_status >= 0:
+            self.position[0] = data.latitude
+            self.position[1] = data.longitude
+            self.position[2] = data.altitude
+            self.position = self.frame.ConvLLA2NED(self.position)
+
+            self.pos = np.ndarray.tolist(self.position.reshape((3,)))
+            self.pos[2] = -2
+            self.pos = tuple(self.pos)
+            #print(self.pos)
+
+
         #print('GPS Status:  ',self.gps_status)
 
     def main(self):
@@ -113,7 +116,7 @@ class PathPlanning:
         while not self.home_set:
             rate.sleep()
 
-	# while loop for gps_check:
+        # while loop for gps_check:
         while self.gps_status == -1 or self.gps_status is None:
             print("BAD GPS")
             rate.sleep()
