@@ -19,7 +19,7 @@ from utils import dist
 
 class PathPlanning:
     def __init__(self):
-        rospy.loginfo('\nINITIALIZING\n')
+        print('\nINITIALIZING\n')
 
         rospy.init_node('RRTnode')
         rospy.wait_for_service('/control/waypoints')
