@@ -105,11 +105,7 @@ class PathPlanning:
             rate.sleep()
 
         while not self.home_set:
-<<<<<<< Updated upstream
-            print('HOME NOT SET!')
-=======
             rospy.loginfo("Home not set!")
->>>>>>> Stashed changes
             rate.sleep()
 
         #		   E-x	     N-y       D-z
