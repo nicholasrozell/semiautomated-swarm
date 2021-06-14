@@ -173,11 +173,11 @@ class BaseRRT:
             # else:
             #     temp_cost = float('inf')
 
-            if self.depth(leaf) > 3:
-                cost = self.g(leaf)  # + temp_cost
-                if cost <= best:
-                    best = cost
-                    goal = leaf
+            #if self.depth(leaf) > 3:
+            cost = self.g(leaf)  # + temp_cost
+            if cost <= best:
+                best = cost
+                goal = leaf
         return goal
 
     def compute_trajectory(self):
@@ -193,7 +193,7 @@ class BaseRRT:
         if leaf is None:
             return None
         path = bspline(self.construct_path(self.x_init, leaf), n=4, degree=2)
-        # path = self.construct_path(self.x_init, leaf)
+        #path = self.construct_path(self.x_init, leaf)
         return tuple(map(tuple, path)), leaves
 
     def g(self, v):
@@ -269,8 +269,11 @@ class MiniRRTP(BaseRRT):
         self.graph.add_node(self.x_init, 0)
         while self.graph.num_nodes() <= 300:
             r = self.shrinking_ball_radius()
+            print(r)
             x_rand = self.sample_free()
+            print(x_rand)
             x_nearest = self.nearest(x_rand, r)
+            print(x_nearest)
             x_new = self.steer(x_nearest, x_rand)
 
             X_near = self.extend(x_new, x_nearest)
