@@ -19,7 +19,7 @@ from utils import dist
 
 class PathPlanning:
     def __init__(self):
-        print('\nINITIALIZING\n')
+        rospy.loginfo('\nINITIALIZING\n')
 
         rospy.init_node('RRTnode')
         rospy.wait_for_service('/control/waypoints')
@@ -48,7 +48,7 @@ class PathPlanning:
             self.home_pos_data[2] = data.geo.altitude
 
             self.frame.addRefLLA(self.home_pos_data)
-            print('Reference set\n')
+            rospy.loginfo('Reference set\n')
             self.home_set = True
 
     def global_heading(self, data):
@@ -101,11 +101,15 @@ class PathPlanning:
 
         # while loop for gps_check:
         while self.gps_status == -1 or self.gps_status is None:
-            print("BAD GPS")
+            rospy.loginfo("BAD GPS")
             rate.sleep()
 
         while not self.home_set:
+<<<<<<< Updated upstream
             print('HOME NOT SET!')
+=======
+            rospy.loginfo("Home not set!")
+>>>>>>> Stashed changes
             rate.sleep()
 
         #		   E-x	     N-y       D-z
@@ -123,7 +127,8 @@ class PathPlanning:
 
         start_index = 0
 
-        print('Calculating Trajectory...\n')
+        rospy.loginfo("Calculating Trajectory...")
+        #print('Calculating Trajectory...\n')
         while not rospy.is_shutdown():
             if graph.num_nodes() == 0:
                 #t0 = time.time()
@@ -161,7 +166,8 @@ class PathPlanning:
 
             if path is not None:
                 if dist(self.pos, goal) <= delta*3 or goal in path:
-                    print('Goal Reached.\n')
+                    rospy.loginfo("Goal reached")
+                    #print('Goal Reached.\n')
                     print('trail :  ', trail, '\n')
                     print('position:  ', position, '\n')
                     break
