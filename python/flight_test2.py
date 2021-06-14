@@ -105,6 +105,7 @@ class PathPlanning:
             rate.sleep()
 
         while not self.home_set:
+            print('HOME NOT SET!')
             rate.sleep()
 
         #		   E-x	     N-y       D-z
