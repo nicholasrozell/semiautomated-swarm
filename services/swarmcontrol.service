@@ -5,7 +5,7 @@ Requires=mavproxy.service apmlaunch.service
 Before=mavproxy.service apmlaunch.service
 
 [Service]
-User=sparky
+User=$USER
 ExecStart=/bin/bash $HOME/semiautomated-swarm/scripts/swarmcontrol.sh
 Restart=on-failure
 

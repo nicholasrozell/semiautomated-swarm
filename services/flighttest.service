@@ -5,7 +5,7 @@ Requires=swarmcontrol.service
 After=swarmcontrol.service
 
 [Service]
-User=sparky
+User=$USER
 #ExecStartPre=/bin/sleep 25
 ExecStart=/bin/bash $HOME/semiautomated-swarm/scripts/flighttest2.sh
 Restart=on-failure

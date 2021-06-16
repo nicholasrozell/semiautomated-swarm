@@ -4,7 +4,7 @@ Description=Mav Proxy Script
 After=network.target
 
 [Service]
-User=sparky
+User=$USER
 #EnvironmentFile=/etc/default/mavproxy_params
 #ExecStart=/usr/local/bin/mavproxy.py --master=${DEVICE},${DEVICE_BAUD} --out=udp:${UDP_ADR}:${UDP_PORT1} --out=udp:${UDP_ADR}:${UDP_PORT2} --state-basedir=/home/sparky/semiautomated-swarm/logs --daemon
 ExecStart=/bin/bash $HOME/semiautomated-swarm/scripts/mavproxy_script4.sh
