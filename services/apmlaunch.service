@@ -7,7 +7,7 @@ After=mavproxy.service
 #seriallink.service
 
 [Service]
-ExecStart=/bin/bash /home/$USER/semiautomated-swarm/scripts/apmlaunch.sh
+ExecStart=/bin/bash ~/semiautomated-swarm/scripts/apmlaunch.sh
 Restart=on-failure
 
 [Install]

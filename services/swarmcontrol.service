@@ -6,7 +6,7 @@ Before=mavproxy.service apmlaunch.service
 
 [Service]
 User=sparky
-ExecStart=/bin/bash /home/$USER/semiautomated-swarm/scripts/swarmcontrol.sh
+ExecStart=/bin/bash ~/semiautomated-swarm/scripts/swarmcontrol.sh
 Restart=on-failure
 
 [Install]

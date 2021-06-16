@@ -7,7 +7,7 @@ After=swarmcontrol.service
 [Service]
 User=sparky
 #ExecStartPre=/bin/sleep 25
-ExecStart=/bin/bash /home/$USER/semiautomated-swarm/scripts/flighttest2.sh
+ExecStart=/bin/bash ~/semiautomated-swarm/scripts/flighttest2.sh
 Restart=on-failure
 
 [Install]
