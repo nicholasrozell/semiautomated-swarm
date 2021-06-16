@@ -7,7 +7,7 @@ After=network.target
 User=sparky
 #EnvironmentFile=/etc/default/mavproxy_params
 #ExecStart=/usr/local/bin/mavproxy.py --master=${DEVICE},${DEVICE_BAUD} --out=udp:${UDP_ADR}:${UDP_PORT1} --out=udp:${UDP_ADR}:${UDP_PORT2} --state-basedir=/home/sparky/semiautomated-swarm/logs --daemon
-ExecStart=/bin/bash /home/sparky/semiautomated-swarm/scripts/mavproxy_script4.sh
+ExecStart=/bin/bash /home/$USER/semiautomated-swarm/scripts/mavproxy_script4.sh
 Restart=on-failure
 
 [Install]

@@ -5,7 +5,7 @@ Requires=mavproxy.service
 After=mavproxy.service
 
 [Service]
-ExecStart=/home/sparky/SeriaLink/build/SeriaLink
+ExecStart=/home/$USER/SeriaLink/build/SeriaLink
 Restart=on-failure
 
 [Install]
