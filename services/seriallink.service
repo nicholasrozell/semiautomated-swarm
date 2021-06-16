@@ -5,7 +5,7 @@ Requires=mavproxy.service
 After=mavproxy.service
 
 [Service]
-ExecStart=~/semiautomated-swarm/SeriaLink/build/SeriaLink
+ExecStart=$HOME/semiautomated-swarm/SeriaLink/build/SeriaLink
 Restart=on-failure
 
 [Install]

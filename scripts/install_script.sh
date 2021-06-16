@@ -21,7 +21,7 @@ git submodule update --init --recursive
 cd Tools/environment_install
 ./install-prereqs-ubuntu.sh -y
 
-. ~/.profile 
+. $HOME/.profile 
 cd ../..
 
 sleep 5s
@@ -42,8 +42,8 @@ sudo apt update
 sleep 1s
 sudo apt install ros-noetic-ros-base -y
 
-echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
-source ~/.bashrc
+echo "source /opt/ros/noetic/setup.bash" >> $HOME/.bashrc
+source $HOME/.bashrc
 
 sleep 2s
 sudo apt install python3-rosdep python3-rosinstall python3-rosinstall-generator python3-wstool build-essential -y
