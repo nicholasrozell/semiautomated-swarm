@@ -1,0 +1,12 @@
+[Unit]
+Description=SwarmLaunch Script
+Requires=apmconnect.service
+After=apmconnect.service
+
+[Service]
+User=r2
+ExecStart=/bin/bash /home/r2/services/swarmlaunch.sh
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

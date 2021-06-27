@@ -1,0 +1,3 @@
+<launch>
+     <node name="swarmPlanning_node" pkg="swarm" type="flight_test2_Quad.py" output="screen"/>
+</launch>

@@ -1,0 +1,3 @@
+<launch>
+     <node name="swarmGNC_node" pkg="swarm" type="Swarm_Quad.py" output="screen"/>
+</launch>

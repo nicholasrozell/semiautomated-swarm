@@ -1,0 +1,13 @@
+[Unit]
+Description=Path Planning algorithm
+Requires=apmconnect.service
+After=apmconnect.service
+
+[Service]
+User=r2
+ExecStartPre=/bin/sleep 20
+ExecStart=/bin/bash /home/r2/services/swarmplanning.sh
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

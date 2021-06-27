@@ -1,0 +1,8 @@
+prefix=/home/r2/ros_ws/devel
+
+Name: swarm
+Description: Description of swarm
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
