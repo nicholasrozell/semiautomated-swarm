@@ -117,11 +117,13 @@ class PathPlanning:
             rate.sleep()
 
         #		            N-x	     E-y       D-z
-        dims = np.array([(-10, 80), (-120, 20), (-10, -10)])
+        dims = np.array([(-10, 80), (-120, 20), (-1, -1)])
         #dims = np.array([(-30, 40), (-80, 60), (-40, -40)])
-        obstacle = [(Point(40, -50).buffer(40))]
+        obstacle = [(Point(40, -50).buffer(5)), (Point(0, -50).buffer(10))]
+        wps = [(60, -100, -1), (0, 0, 0)]
+        count = 0
         init = self.pos
-        goal = (60, -100, -10)
+        goal = wps[count]
         delta = 5
         k = 2
 
@@ -144,12 +146,17 @@ class PathPlanning:
 
         while not rospy.is_shutdown():
             if graph.num_nodes() == 0:
-
                 rrt = RRT(graph, init, goal, delta, k, path, self.heading)
             if graph.num_nodes() <= 250:
                 path, leaves = rrt.search()
             else:
-                init = path[path.index(rrt.brute_force(self.pos, path))+1]
+                print("path before init = ",path)
+                A = rrt.brute_force(self.pos, path)
+                B = path.index(A)
+                print("rrt brute force = ", A)
+                print("path index =", B)
+          
+                init = path[B+1]
                 trail.append(path)
                 position.append(self.pos)
 
@@ -170,20 +177,29 @@ class PathPlanning:
                     wp_point.z_alt = pathNED[i][2]#pathNED[2][i]
                     wp_msg += [wp_point]
 
-                print(wp_msg, '\n')
+                #print(wp_msg, '\n')
                 resp = wp_push(start_index, wp_msg)
-                print(resp, '\n')
+                #print(resp, '\n')
 
                 start_index += path.index(rrt.brute_force(self.pos, path))+1
                 rate.sleep()
 
             if path is not None:
-                if dist(self.pos, goal) <= delta*3 or goal in path:
-                    rospy.loginfo("Goal reached")
+                if goal in path:
+                    print("Within goal radius", dist(self.pos, goal), delta)
+                    while dist(self.pos, goal) > delta*2:
+                        print("Within goal radius", dist(self.pos, goal), delta)
+                        rate.sleep()
+                    count += 1
+                    if count >= len(wps):
+                        rospy.loginfo("Final Goal Reached")
+                        break
+                    goal = wps[count]
+                    rospy.loginfo("Goal Updated")
                     #print('Goal Reached.\n')
-                    print('trail :  ', trail, '\n')
-                    print('position:  ', position, '\n')
-                    break
+                    #print('trail :  ', trail, '\n')
+                    #print('position:  ', position, '\n')
+                    #break
 
             print('EOL')
 
