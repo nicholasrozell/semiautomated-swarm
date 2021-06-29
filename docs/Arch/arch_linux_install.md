@@ -83,7 +83,7 @@ To write and quit out of fdisk, press 'w'.
 
 To format these parititons for their proper use. 
 Use the command for partition 1 (mm0blk0p1).
-> mkfs.fat F32 /dev/boot_partition 
+> mkfs.fat -F32 /dev/boot_partition 
 
 For partition 2 (mm0blk0p2).
 > mkswap /dev/swap_partiiton 
