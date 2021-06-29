@@ -10,6 +10,7 @@ To setup wifi use.
 
 The iwd prompt should start.
 > device = The device wanted to connect to the internet, i.e. wlan0
+>
 > SSID = Service Set Identifier, i.e. the networks name
 
 Use the commands as follow to connect wirelessly.
@@ -47,6 +48,7 @@ partition = mm0blk0
 The fdisk prompt should start, use command shown for help.
 To start partitioning the disk use command.
 > g
+
 To start a GPT table
 
 To make a new partition use command.
@@ -56,6 +58,7 @@ The first partition will be by defualt 1. Each partition also by defualt will be
 The beginning of the partition can be skipped, press 'Enter' to skip.
 For the end of the partition enter.
 > +512M
+
 To create a partion of 512 megabytes.
 This will be the boot partion.
 
@@ -63,6 +66,7 @@ Press 'n' again, and '2'.
 Skip the beginning of the partition.
 For the end, enter.
 > +10G
+
 This is the swap partition that is 10 gigabytes.
 
 Press 'n' again, and '3'.
@@ -119,6 +123,7 @@ text_editor = nano, vim, ...
 Uncomment any needed locales, by editing locale.gen file.
 We want en_US.UTF-8.
 > nano /etc/locale.gen
+
 Find the line 'en_US.UTF-8 UTF-8.'
 
 To generate the locales use the command.
@@ -140,6 +145,7 @@ Add matching entries to the host file.
 
 Set the root password with
 > passwd
+
 This should not be something easy like 'admin'.
 
 To install a boot loader use.
@@ -177,6 +183,7 @@ To add privaliges to the new user.
 
 Additionally a line needs to be uncommented in visudo.
 > EDITOR=text_editor visudo
+
 Uncomment the line %wheel ALL=(ALL)=ALL. Keep the percent sign.
 
 ### Additional packages
@@ -224,10 +231,12 @@ For ROS installations use the command
 
 Once this is completed (will most likely take 2+ hours) use the commands to initialize ROS.
 > sudo rosdep init
+>
 > rosdep update
 
 To setup the ROS enviroment use.
 > echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+>
 > source ~/.bashrc
 
 Then install MavProxy using
@@ -240,6 +249,7 @@ Now create the file /etc/grub.d/31_hold_shift containing this [script](https://g
 
 Now make the file and executable and regnerate the grub configurations
 > chmod a+x /etc/grub.d/31_hold_shift
+>
 > grub-mkconfig -o /boot/grub/grub.cfg
 
 Then reboot the system for it to take effect.
