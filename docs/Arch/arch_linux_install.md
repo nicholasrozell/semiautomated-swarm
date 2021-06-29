@@ -140,7 +140,9 @@ Create the hostname file.
 Add matching entries to the host file.
 > nano /etc/hosts
 >> 127.0.0.1    localhost
+>>
 >> ::1          localhost
+>>
 >> 127.0.1.1    myhostname.localdomain myhostname
 
 Set the root password with
