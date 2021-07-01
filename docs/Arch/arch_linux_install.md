@@ -153,6 +153,9 @@ This should not be something easy like 'admin'.
 To install a boot loader use.
 > pacman -S grub
 
+For booting a manager is necessary.
+> pacman -S efibootmgr
+
 Make a directory for the boot directory.
 > mkdir /boot/EFI
 
