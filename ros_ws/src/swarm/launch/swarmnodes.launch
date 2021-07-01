@@ -1,6 +1,7 @@
 <launch>
-    <node name="swarmComm_node" pkg="swarm" type="SerialLink.py" output="screen" respawn="true"/>
+    <!--<node name="swarmComm_node" pkg="swarm" type="SerialLink.py" output="screen" respawn="true"/>-->
 
+    <node name="swarmComm_node" pkg="swarm" type="serial_node" output="screen" respawn="true"/>
     <node name="swarmGNC_node" pkg="swarm" type="Swarm_Quad.py" output="screen" respawn="true"/>
 
     <!--<node name="swarmPlanning_node" pkg="swarm" type="flight_test2.py" output="log"/> -->

@@ -22,7 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(Eigen3 REQUIRED)
-##find_package(Qt5 COMPONENTS Core REQUIRED)
+find_package(Qt5 COMPONENTS Core REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -147,8 +147,8 @@ include_directories(
 add_executable(${PROJECT_NAME}_node src/main.cpp src/navigation.cpp
     src/guidance.cpp src/pid.cpp src/gnc.cpp)
 
-##add_executable(Serial_node src/commlink/main.cpp src/commlink.cpp include/commlink.h)
-##qt5_use_modules(Serial_node Core SerialPort Network)
+add_executable(serial_node src/serial/main.cpp src/serial/commlink.cpp include/commlink.h)
+qt5_use_modules(serial_node Core SerialPort Network)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -165,9 +165,9 @@ add_executable(${PROJECT_NAME}_node src/main.cpp src/navigation.cpp
    ${catkin_LIBRARIES}
  )
 
-##target_link_libraries(Serial_node
-##  ${catkin_LIBRARIES}
-##)
+target_link_libraries(serial_node
+  ${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##

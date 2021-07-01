@@ -117,10 +117,10 @@ class PathPlanning:
             rate.sleep()
 
         #		            N-x	     E-y       D-z
-        dims = np.array([(-10, 80), (-120, 20), (-1, -1)])
+        dims = np.array([(-10, 80), (-120, 20), (-10, -10)])
         #dims = np.array([(-30, 40), (-80, 60), (-40, -40)])
-        obstacle = [(Point(40, -50).buffer(5)), (Point(0, -50).buffer(10))]
-        wps = [(60, -100, -1), (0, 0, 0)]
+        obstacle = [(Point(35, -70).buffer(25))]
+        wps = [(60, -100, -10), (0, 0, 0)]
         count = 0
         init = self.pos
         goal = wps[count]
@@ -150,12 +150,11 @@ class PathPlanning:
             if graph.num_nodes() <= 250:
                 path, leaves = rrt.search()
             else:
-                print("path before init = ",path)
+                #print("path before init = ",path)
                 A = rrt.brute_force(self.pos, path)
                 B = path.index(A)
-                print("rrt brute force = ", A)
-                print("path index =", B)
-          
+                #print("rrt brute force = ", A)
+                #print("path index =", B)
                 init = path[B+1]
                 trail.append(path)
                 position.append(self.pos)
@@ -164,7 +163,7 @@ class PathPlanning:
                 graph.clear()
 
                 pathNED = np.asarray(path)
-                print(pathNED.shape)
+                #print(pathNED.shape)
                 wp_msg = []
                 # pathLLA = self.frame.ConvNED2LLA(pathNED.T)
 
@@ -186,20 +185,36 @@ class PathPlanning:
 
             if path is not None:
                 if goal in path:
+                    #trail.append(path)
+                    #position.append(self.pos)
+
+                    #pathNED = np.asarray(path)
+                    #wp_msg = []
+                    
+                    #for i in range(len(pathNED)):
+                    #    wp_point = Waypoint()
+                    #    wp_point.frame = 1
+
+                    #    wp_point.x_lat = pathNED[0][i]
+                    #    wp_point.y_long = pathNED[1][i]
+                    #    wp_point.z_alt = pathNED[2][i]
+                    #    wp_msg += [wp_point]
+
+                    #resp = wp_push(start_index, wp_msg)
+
                     print("Within goal radius", dist(self.pos, goal), delta)
                     while dist(self.pos, goal) > delta*2:
                         print("Within goal radius", dist(self.pos, goal), delta)
                         rate.sleep()
+                        position.append(self.pos)
                     count += 1
                     if count >= len(wps):
                         rospy.loginfo("Final Goal Reached")
+                        print('trail :  ', trail, '\n')
+                        print('position :  ', position, '\n')
                         break
                     goal = wps[count]
                     rospy.loginfo("Goal Updated")
-                    #print('Goal Reached.\n')
-                    #print('trail :  ', trail, '\n')
-                    #print('position:  ', position, '\n')
-                    #break
 
             print('EOL')
 
